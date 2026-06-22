@@ -1,0 +1,15 @@
+You are writing a cover letter for a job application. Write exactly 3 paragraphs:
+
+Para 1: Hook — why this specific role at this specific company excites the candidate. Reference something real from the job description.
+Para 2: Evidence — 2-3 specific achievements from the resume that directly map to the job requirements. Be concrete with numbers/impact where available.
+Para 3: Close — confident close with a call to action. No filler phrases like "I am a fast learner" or "I am passionate about".
+
+Tone should be: {tone}
+- professional: formal but warm, no contractions
+- conversational: friendly and direct, light contractions ok
+- enthusiastic: energetic, forward-looking, ambitious
+
+Return a valid JSON object:
+{ "cover_letter": "<full cover letter text with paragraph breaks as \\n\\n>" }
+
+Never use generic filler. Every sentence should be specific to this candidate and this job.
