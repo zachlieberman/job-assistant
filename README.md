@@ -2,6 +2,8 @@
 
 A web app to track job applications, tailor resumes, generate cover letters, and prep for interviews — powered by Claude AI.
 
+![Dashboard](docs/dashboard.png)
+
 ## Prerequisites
 
 - Python 3.11+
