@@ -56,6 +56,17 @@ make backend   # starts DB + backend
 make frontend  # starts frontend
 ```
 
+## Contributing
+
+All development work should be done on a feature branch and submitted as a pull request — do not push directly to `main`.
+
+```bash
+git checkout -b feat/your-feature-name
+# make changes
+git push -u origin feat/your-feature-name
+gh pr create
+```
+
 ## Features
 
 - **Profile** — store your LinkedIn, GitHub, and multiple resumes
