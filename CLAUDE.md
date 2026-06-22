@@ -51,6 +51,10 @@ React 18 + TypeScript + Vite + Tailwind. React Router v6 for routing. All API ca
 - `pages/InterviewPrep` — loads app by id, checkbox question types, renders QuestionCard list
 - `components/` — Navbar, ApplicationTable, StatusBadge, ResumeEditor, QuestionCard
 
+## Git Workflow
+- All development work must be done on a feature branch — never push directly to `main`
+- Open a PR for every change and merge via GitHub
+
 ## Key Constraints
 - Claude model is always `claude-sonnet-4-6` — do not change
 - Max tokens: 2000 for resume/cover letter, 1500 for interview prep
