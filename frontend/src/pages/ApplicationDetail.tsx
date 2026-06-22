@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate, useLocation } from 'react-router-dom'
+import { useParams, useNavigate, useLocation, Link } from 'react-router-dom'
 import {
   getApplication,
   updateApplication,
@@ -13,6 +13,26 @@ import {
 } from '../api/client'
 import Toast from '../components/Toast'
 import { useToast } from '../hooks/useToast'
+
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false)
+  function handleCopy() {
+    if (!text) return
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
+  }
+  return (
+    <button
+      onClick={handleCopy}
+      disabled={!text}
+      className="text-xs text-gray-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed px-2 py-0.5 rounded border border-gray-700 hover:border-gray-500 transition-colors"
+    >
+      {copied ? 'Copied!' : 'Copy'}
+    </button>
+  )
+}
 
 const STATUSES = ['applied', 'phone_screen', 'technical', 'offer', 'rejected']
 
@@ -240,6 +260,7 @@ export default function ApplicationDetail() {
         <div className="flex flex-col gap-1">
           <h1 className="text-2xl font-bold text-white">{app.company}</h1>
           <p className="text-gray-400">{app.role}</p>
+          <p className="text-gray-600 text-xs mt-0.5">Applied {app.date_applied}</p>
           {app.job_url && (
             <a href={app.job_url} target="_blank" rel="noreferrer" className="text-indigo-400 text-sm hover:text-indigo-300 transition-colors mt-0.5">
               {app.job_url} ↗
@@ -282,9 +303,9 @@ export default function ApplicationDetail() {
         {!hasResumes ? (
           <p className="text-sm text-gray-500">
             No resumes found.{' '}
-            <a href="/profile" className="text-indigo-400 hover:text-indigo-300 underline">
+            <Link to="/profile" className="text-indigo-400 hover:text-indigo-300 underline">
               Add a resume in your profile
-            </a>{' '}
+            </Link>{' '}
             to tailor and generate cover letters.
           </p>
         ) : (
@@ -369,6 +390,7 @@ export default function ApplicationDetail() {
         onChange={(v) => setEdits((ed) => ({ ...ed, tailored_resume: v }))}
         defaultRows={20}
         mono
+        actions={<CopyButton text={edits.tailored_resume} />}
       />
 
       <Section
@@ -376,6 +398,7 @@ export default function ApplicationDetail() {
         value={edits.cover_letter}
         onChange={(v) => setEdits((ed) => ({ ...ed, cover_letter: v }))}
         defaultRows={10}
+        actions={<CopyButton text={edits.cover_letter} />}
       />
 
       <Section
