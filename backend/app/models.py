@@ -36,5 +36,7 @@ class Application(Base):
     tailored_resume = Column(Text, nullable=True)
     cover_letter = Column(Text, nullable=True)
     notes = Column(Text, nullable=True)
+    location = Column(String, nullable=True)
+    salary_range = Column(String, nullable=True)
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())

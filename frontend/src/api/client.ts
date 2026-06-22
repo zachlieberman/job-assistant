@@ -66,6 +66,8 @@ export interface Application {
   tailored_resume: string | null
   cover_letter: string | null
   notes: string | null
+  location: string | null
+  salary_range: string | null
   created_at: string
   updated_at: string
 }
@@ -77,6 +79,8 @@ export interface ApplicationCreate {
   job_description: string
   status?: string
   notes?: string | null
+  location?: string | null
+  salary_range?: string | null
 }
 
 export interface ApplicationUpdate {
@@ -86,6 +90,8 @@ export interface ApplicationUpdate {
   cover_letter?: string
   job_url?: string
   resume_id?: number | null
+  location?: string | null
+  salary_range?: string | null
 }
 
 export interface InterviewQuestion {

@@ -11,6 +11,8 @@ interface FormState {
   role: string
   jobUrl: string
   jobDescription: string
+  location: string
+  salaryRange: string
 }
 
 export default function NewApplication() {
@@ -20,6 +22,8 @@ export default function NewApplication() {
     role: '',
     jobUrl: '',
     jobDescription: '',
+    location: '',
+    salaryRange: '',
   })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -39,6 +43,8 @@ export default function NewApplication() {
         role: form.role,
         job_url: form.jobUrl || null,
         job_description: form.jobDescription,
+        location: form.location || null,
+        salary_range: form.salaryRange || null,
       })
       navigate(`/applications/${res.data.id}`, { state: { created: true } })
     } catch {
@@ -77,6 +83,24 @@ export default function NewApplication() {
               value={form.role}
               onChange={setField('role')}
               placeholder="Software Engineer"
+              className={inputClass}
+            />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label className={labelClass}>Location</label>
+            <input
+              value={form.location}
+              onChange={setField('location')}
+              placeholder="Remote, New York, NY..."
+              className={inputClass}
+            />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label className={labelClass}>Salary Range</label>
+            <input
+              value={form.salaryRange}
+              onChange={setField('salaryRange')}
+              placeholder="$120k – $160k"
               className={inputClass}
             />
           </div>

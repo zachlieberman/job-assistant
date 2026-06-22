@@ -104,6 +104,8 @@ class ApplicationCreate(BaseModel):
     job_description: str
     status: ApplicationStatus = "applied"
     notes: Optional[str] = None
+    location: Optional[str] = None
+    salary_range: Optional[str] = None
 
     @field_validator("job_description")
     @classmethod
@@ -120,6 +122,8 @@ class ApplicationUpdate(BaseModel):
     cover_letter: Optional[str] = None
     job_url: Optional[str] = None
     resume_id: Optional[int] = None
+    location: Optional[str] = None
+    salary_range: Optional[str] = None
 
 
 class ApplicationResponse(BaseModel):
@@ -134,6 +138,8 @@ class ApplicationResponse(BaseModel):
     tailored_resume: Optional[str]
     cover_letter: Optional[str]
     notes: Optional[str]
+    location: Optional[str]
+    salary_range: Optional[str]
     created_at: datetime
     updated_at: datetime
 
