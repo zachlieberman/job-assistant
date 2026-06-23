@@ -112,6 +112,8 @@ interface Edits {
   tailored_resume: string
   cover_letter: string
   job_description: string
+  location: string
+  salary_range: string
 }
 
 export default function ApplicationDetail() {
@@ -148,6 +150,8 @@ export default function ApplicationDetail() {
         tailored_resume: res.data.tailored_resume ?? '',
         cover_letter: res.data.cover_letter ?? '',
         job_description: res.data.job_description ?? '',
+        location: res.data.location ?? '',
+        salary_range: res.data.salary_range ?? '',
       })
       if (res.data.resume_id) setSelectedResumeId(res.data.resume_id)
     }).catch(() => setError('Failed to load application.'))
@@ -174,6 +178,8 @@ export default function ApplicationDetail() {
         tailored_resume: edits.tailored_resume,
         cover_letter: edits.cover_letter,
         resume_id: selectedResumeId,
+        location: edits.location || null,
+        salary_range: edits.salary_range || null,
       })
       setApp(res.data)
       showToast('Changes saved')
@@ -261,6 +267,10 @@ export default function ApplicationDetail() {
           <h1 className="text-2xl font-bold text-white">{app.company}</h1>
           <p className="text-gray-400">{app.role}</p>
           <p className="text-gray-600 text-xs mt-0.5">Applied {app.date_applied}</p>
+          <div className="flex items-center gap-3 mt-0.5">
+            {app.location && <span className="text-gray-500 text-xs">📍 {app.location}</span>}
+            {app.salary_range && <span className="text-gray-500 text-xs">💰 {app.salary_range}</span>}
+          </div>
           {app.job_url && (
             <a href={app.job_url} target="_blank" rel="noreferrer" className="text-indigo-400 text-sm hover:text-indigo-300 transition-colors mt-0.5">
               {app.job_url} ↗
@@ -285,7 +295,7 @@ export default function ApplicationDetail() {
       </div>
 
       {/* Status bar */}
-      <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 flex items-center gap-4">
+      <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 flex flex-wrap items-center gap-4">
         <span className={LABEL}>Status</span>
         <select
           value={edits.status}
@@ -294,6 +304,22 @@ export default function ApplicationDetail() {
         >
           {STATUSES.map((s) => <option key={s} value={s}>{s.replace('_', ' ').replace(/\b\w/g, (c) => c.toUpperCase())}</option>)}
         </select>
+        <div className="h-4 w-px bg-gray-700" />
+        <span className={LABEL}>Location</span>
+        <input
+          value={edits.location}
+          onChange={(e) => setEdits((ed) => ({ ...ed, location: e.target.value }))}
+          placeholder="Remote, NYC..."
+          className="bg-transparent border-b border-gray-700 focus:border-indigo-500 text-sm text-gray-300 placeholder-gray-600 focus:outline-none py-0.5 min-w-[120px]"
+        />
+        <div className="h-4 w-px bg-gray-700" />
+        <span className={LABEL}>Salary</span>
+        <input
+          value={edits.salary_range}
+          onChange={(e) => setEdits((ed) => ({ ...ed, salary_range: e.target.value }))}
+          placeholder="$120k – $160k"
+          className="bg-transparent border-b border-gray-700 focus:border-indigo-500 text-sm text-gray-300 placeholder-gray-600 focus:outline-none py-0.5 min-w-[120px]"
+        />
       </div>
 
       {/* AI Actions panel */}

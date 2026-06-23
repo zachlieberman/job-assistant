@@ -27,6 +27,16 @@ docker run --name job-assistant-db \
 ```
 Tables are created automatically on backend startup via `create_all`.
 
+**Any changes to the database schema require a full teardown and restart:**
+```bash
+docker rm -f job-assistant-db
+docker run --name job-assistant-db \
+  -e POSTGRES_PASSWORD=postgres \
+  -e POSTGRES_DB=jobassistant \
+  -p 5432:5432 -d postgres
+```
+Then restart the backend so `create_all` recreates the tables with the new schema.
+
 ## Architecture
 
 ### Backend (`backend/`)
