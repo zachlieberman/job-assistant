@@ -19,12 +19,25 @@ const statusColors: Record<string, string> = {
   rejected: 'bg-red-500/15 text-red-400 ring-1 ring-red-500/30',
 }
 
+type SortKey = 'company' | 'role' | 'status' | 'date_applied'
+
 interface Props {
   applications: Application[]
+  sortKey: SortKey
+  sortDir: 'asc' | 'desc'
+  onSort: (key: SortKey) => void
   onStatusChange: (id: number, newStatus: string) => void
 }
 
-export default function ApplicationTable({ applications, onStatusChange }: Props) {
+function SortIcon({ active, dir }: { active: boolean; dir: 'asc' | 'desc' }) {
+  return (
+    <span className={`ml-1 inline-block transition-opacity ${active ? 'opacity-100' : 'opacity-0 group-hover/th:opacity-40'}`}>
+      {active && dir === 'asc' ? '↑' : '↓'}
+    </span>
+  )
+}
+
+export default function ApplicationTable({ applications, sortKey, sortDir, onSort, onStatusChange }: Props) {
   const navigate = useNavigate()
   const { toast, show: showToast } = useToast()
 
@@ -56,11 +69,17 @@ export default function ApplicationTable({ applications, onStatusChange }: Props
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-gray-800">
-            <th className="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Company</th>
-            <th className="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Role</th>
-            <th className="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-            <th className="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Applied</th>
-            <th className="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"></th>
+            {(['company', 'role', 'status', 'date_applied'] as SortKey[]).map((key) => (
+              <th
+                key={key}
+                onClick={() => onSort(key)}
+                className="group/th px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer select-none hover:text-gray-300 transition-colors"
+              >
+                {key === 'date_applied' ? 'Applied' : key.replace('_', ' ')}
+                <SortIcon active={sortKey === key} dir={sortDir} />
+              </th>
+            ))}
+            <th className="px-5 py-3.5"></th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-800/60">

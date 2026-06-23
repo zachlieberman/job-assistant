@@ -42,12 +42,33 @@ export default function Dashboard() {
     }
   }
 
-  const filtered = search.trim()
-    ? applications.filter((a) => {
-        const q = search.toLowerCase()
-        return a.company.toLowerCase().includes(q) || a.role.toLowerCase().includes(q)
-      })
-    : applications
+  const [sortKey, setSortKey] = useState<'company' | 'role' | 'status' | 'date_applied'>('date_applied')
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
+
+  const handleSort = (key: typeof sortKey) => {
+    if (key === sortKey) {
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))
+    } else {
+      setSortKey(key)
+      setSortDir('asc')
+    }
+  }
+
+  const filtered = (() => {
+    const base = search.trim()
+      ? applications.filter((a) => {
+          const q = search.toLowerCase()
+          return a.company.toLowerCase().includes(q) || a.role.toLowerCase().includes(q)
+        })
+      : applications
+
+    return [...base].sort((a, b) => {
+      const av = a[sortKey] ?? ''
+      const bv = b[sortKey] ?? ''
+      const cmp = av < bv ? -1 : av > bv ? 1 : 0
+      return sortDir === 'asc' ? cmp : -cmp
+    })
+  })()
 
   const stats = {
     total: applications.length,
@@ -123,6 +144,9 @@ export default function Dashboard() {
       {!loading && !error && (
         <ApplicationTable
           applications={filtered}
+          sortKey={sortKey}
+          sortDir={sortDir}
+          onSort={handleSort}
           onStatusChange={(id, newStatus) =>
             setApplications((prev) =>
               prev.map((a) => (a.id === id ? { ...a, status: newStatus } : a))
