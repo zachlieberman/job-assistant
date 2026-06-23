@@ -152,6 +152,20 @@ export const updateApplication = (id: string | number, payload: ApplicationUpdat
 export const deleteApplication = (id: string | number) =>
   api.delete(`/applications/${id}`)
 
+export interface CsvImportResult {
+  imported: number
+  skipped: number
+  errors: string[]
+}
+
+export const importApplicationsCsv = (file: File) => {
+  const form = new FormData()
+  form.append('file', file)
+  return api.post<CsvImportResult>('/applications/import-csv', form, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
+}
+
 // Interview
 export const generateInterviewPrep = (
   jobDescription: string,

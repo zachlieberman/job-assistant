@@ -1,10 +1,38 @@
-from fastapi import APIRouter, HTTPException, Depends, Query
+import csv
+import io
+from datetime import date, datetime
+
+from fastapi import APIRouter, HTTPException, Depends, Query, UploadFile, File
+from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from typing import Optional, List
 from app.database import get_db
 from app.models import Application
 from app.schemas import ApplicationCreate, ApplicationUpdate, ApplicationResponse, ApplicationStatus
+
+CSV_STATUS_MAP: dict[str, str] = {
+    "applied": "applied",
+    "phone screen": "phone_screen",
+    "phone_screen": "phone_screen",
+    "technical": "technical",
+    "technical interview": "technical",
+    "offer": "offer",
+    "rejected": "rejected",
+    "other": "applied",
+    "": "applied",
+}
+
+
+def _parse_csv_date(raw: str) -> date:
+    raw = raw.strip()
+    for fmt in ("%m/%d/%Y", "%Y-%m-%d", "%m-%d-%Y"):
+        try:
+            return datetime.strptime(raw, fmt).date()
+        except ValueError:
+            continue
+    return date.today()
+
 
 router = APIRouter(prefix="/applications", tags=["applications"])
 
@@ -67,3 +95,67 @@ async def delete_application(app_id: int, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Application not found")
     await db.delete(app)
     await db.commit()
+
+
+class CsvImportResult(BaseModel):
+    imported: int
+    skipped: int
+    errors: List[str]
+
+
+@router.post("/import-csv", response_model=CsvImportResult)
+async def import_csv(file: UploadFile = File(...), db: AsyncSession = Depends(get_db)):
+    if not file.filename or not file.filename.endswith(".csv"):
+        raise HTTPException(status_code=400, detail="File must be a .csv")
+
+    content = await file.read()
+    text = content.decode("utf-8-sig")  # handles BOM from Excel exports
+    reader = csv.DictReader(io.StringIO(text), delimiter="\t")
+
+    # fallback to comma if no tab columns detected
+    first_line = text.split("\n")[0] if text else ""
+    if "\t" not in first_line:
+        reader = csv.DictReader(io.StringIO(text))
+
+    imported = 0
+    skipped = 0
+    errors: List[str] = []
+
+    for i, row in enumerate(reader, start=2):  # row 1 is header
+        company = (row.get("Company") or "").strip()
+        role = (row.get("Role") or "").strip()
+
+        if not company:
+            skipped += 1
+            continue
+
+        if not role:
+            role = "N/A"
+
+        raw_status = (row.get("Stage") or "").strip().lower()
+        status = CSV_STATUS_MAP.get(raw_status, "applied")
+
+        raw_date = (row.get("Date") or "").strip()
+        applied_date = _parse_csv_date(raw_date) if raw_date else date.today()
+
+        app = Application(
+            company=company,
+            role=role,
+            status=status,
+            date_applied=applied_date,
+            job_url=(row.get("Job Posting Link") or "").strip() or None,
+            job_description="",
+            notes=(row.get("Notes") or "").strip() or None,
+            location=(row.get("Location") or "").strip() or None,
+            salary_range=(row.get("Salary Range") or "").strip() or None,
+        )
+        db.add(app)
+        imported += 1
+
+    try:
+        await db.commit()
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
+    return CsvImportResult(imported=imported, skipped=skipped, errors=errors)
