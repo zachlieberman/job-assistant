@@ -12,6 +12,7 @@ Return a valid JSON object with this exact structure:
 
 Rules:
 - Only rewrite bullet points; keep all section headers, contact info, and education structure intact
-- Keep changes honest — do not fabricate experience
+- Keep changes honest — do not fabricate experience, skills, or technologies
+- Never add a skill, technology, tool, or language that does not already appear in the original resume; you may only rephrase or reorder what is already there
 - Be specific about why each change improves the match
 - keyword_matches and missing_keywords should reflect the final tailored resume
