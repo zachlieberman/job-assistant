@@ -58,6 +58,48 @@ make backend   # starts DB + backend
 make frontend  # starts frontend
 ```
 
+## Testing
+
+The backend has a pytest suite that runs against an in-memory SQLite database — no live Postgres or Anthropic API key needed.
+
+### Setup
+
+```bash
+make install-dev   # installs pytest, httpx, aiosqlite alongside app deps
+```
+
+Or manually:
+
+```bash
+cd backend
+pip install -r requirements-dev.txt
+```
+
+### Running tests
+
+```bash
+make test          # run all tests once
+make test-watch    # re-run on file changes
+```
+
+Or directly:
+
+```bash
+cd backend
+python -m pytest                                     # all tests
+python -m pytest tests/test_applications.py          # one file
+python -m pytest -k "csv"                            # filter by keyword
+python -m pytest -v                                  # verbose output
+```
+
+### Guidelines for new tests
+
+- **Place tests in `backend/tests/`** in a file named `test_<feature>.py`.
+- **Use the `client` fixture** for route tests — it wires the app to an isolated in-memory DB and tears it down after each test.
+- **Mock Claude calls** with `unittest.mock.patch` + `AsyncMock` — never make real API calls in tests.
+- **Keep tests independent** — each test gets a fresh database; do not share state across tests.
+- **Name tests descriptively**: `test_<action>_<condition>` (e.g. `test_create_application_missing_company`).
+
 ## Contributing
 
 All development work should be done on a feature branch and submitted as a pull request — do not push directly to `main`.
@@ -65,6 +107,7 @@ All development work should be done on a feature branch and submitted as a pull 
 ```bash
 git checkout -b feat/your-feature-name
 # make changes
+make test          # confirm tests pass before opening a PR
 git push -u origin feat/your-feature-name
 gh pr create
 ```

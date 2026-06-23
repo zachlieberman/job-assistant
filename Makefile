@@ -1,4 +1,4 @@
-.PHONY: up down backend frontend dev db-reset
+.PHONY: up down backend frontend dev db-reset install-dev test test-watch
 
 up:
 	docker compose up -d
@@ -19,6 +19,15 @@ down:
 	docker compose down
 	pkill -f "uvicorn app.main" 2>/dev/null || true
 	pkill -f "vite" 2>/dev/null || true
+
+install-dev:
+	cd backend && pip install -r requirements-dev.txt
+
+test:
+	cd backend && python -m pytest
+
+test-watch:
+	cd backend && python -m pytest --tb=short -q -f
 
 db-reset:
 	docker compose down -v
