@@ -127,6 +127,8 @@ export default function ApplicationDetail() {
     tailored_resume: '',
     cover_letter: '',
     job_description: '',
+    location: '',
+    salary_range: '',
   })
   const [resumes, setResumes] = useState<Resume[]>([])
   const [selectedResumeId, setSelectedResumeId] = useState<number | null>(null)

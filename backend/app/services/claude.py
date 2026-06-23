@@ -1,5 +1,4 @@
 import json
-import os
 from pathlib import Path
 from anthropic import AsyncAnthropic
 from dotenv import load_dotenv
