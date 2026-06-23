@@ -22,6 +22,34 @@ export default function Dashboard() {
       .finally(() => setLoading(false))
   }, [statusFilter])
 
+  const [sortKey, setSortKey] = useState<'company' | 'role' | 'status' | 'date_applied'>('date_applied')
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
+
+  const handleSort = (key: typeof sortKey) => {
+    if (key === sortKey) {
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))
+    } else {
+      setSortKey(key)
+      setSortDir('asc')
+    }
+  }
+
+  const filtered = (() => {
+    const base = search.trim()
+      ? applications.filter((a) => {
+          const q = search.toLowerCase()
+          return a.company.toLowerCase().includes(q) || a.role.toLowerCase().includes(q)
+        })
+      : applications
+
+    return [...base].sort((a, b) => {
+      const av = a[sortKey] ?? ''
+      const bv = b[sortKey] ?? ''
+      const cmp = av < bv ? -1 : av > bv ? 1 : 0
+      return sortDir === 'asc' ? cmp : -cmp
+    })
+  })()
+
   const handleExport = () => {
     const headers = ['Date', 'Company', 'Role', 'Job Posting Link', 'Stage', 'Notes', 'Location', 'Salary Range']
     const rows = filtered.map((a) => [
@@ -53,46 +81,21 @@ export default function Dashboard() {
     setImportMsg(null)
     try {
       const res = await importApplicationsCsv(file)
-      const { imported, skipped } = res.data
-      setImportMsg(`Imported ${imported} application${imported !== 1 ? 's' : ''}${skipped ? `, skipped ${skipped}` : ''}.`)
-      // refresh list
+      const { imported, skipped, errors } = res.data
+      const parts = [`Imported ${imported} application${imported !== 1 ? 's' : ''}`]
+      if (skipped) parts.push(`skipped ${skipped}`)
+      if (errors.length) parts.push(`${errors.length} error${errors.length !== 1 ? 's' : ''}`)
+      setImportMsg(parts.join(', ') + '.')
       const updated = await listApplications(statusFilter ? { status: statusFilter } : undefined)
       setApplications(updated.data)
-    } catch {
-      setImportMsg('Import failed. Please check the file format and try again.')
+    } catch (err: unknown) {
+      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
+      setImportMsg(detail ?? 'Import failed. Please check the file format and try again.')
     } finally {
       setImporting(false)
       if (fileInputRef.current) fileInputRef.current.value = ''
     }
   }
-
-  const [sortKey, setSortKey] = useState<'company' | 'role' | 'status' | 'date_applied'>('date_applied')
-  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
-
-  const handleSort = (key: typeof sortKey) => {
-    if (key === sortKey) {
-      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))
-    } else {
-      setSortKey(key)
-      setSortDir('asc')
-    }
-  }
-
-  const filtered = (() => {
-    const base = search.trim()
-      ? applications.filter((a) => {
-          const q = search.toLowerCase()
-          return a.company.toLowerCase().includes(q) || a.role.toLowerCase().includes(q)
-        })
-      : applications
-
-    return [...base].sort((a, b) => {
-      const av = a[sortKey] ?? ''
-      const bv = b[sortKey] ?? ''
-      const cmp = av < bv ? -1 : av > bv ? 1 : 0
-      return sortDir === 'asc' ? cmp : -cmp
-    })
-  })()
 
   const stats = {
     total: applications.length,

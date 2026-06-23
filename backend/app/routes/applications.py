@@ -109,12 +109,17 @@ async def import_csv(file: UploadFile = File(...), db: AsyncSession = Depends(ge
         raise HTTPException(status_code=400, detail="File must be a .csv")
 
     content = await file.read()
-    text = content.decode("utf-8-sig")  # handles BOM from Excel exports
-    reader = csv.DictReader(io.StringIO(text), delimiter="\t")
+    try:
+        text = content.decode("utf-8-sig")  # handles BOM from Excel exports
+    except UnicodeDecodeError:
+        raise HTTPException(status_code=400, detail="File must be UTF-8 encoded.")
 
-    # fallback to comma if no tab columns detected
-    first_line = text.split("\n")[0] if text else ""
-    if "\t" not in first_line:
+    # detect delimiter: try tab first, fall back to comma if it yields only one field
+    tab_reader = csv.DictReader(io.StringIO(text), delimiter="\t")
+    tab_fields = tab_reader.fieldnames or []
+    if len(tab_fields) > 1:
+        reader = tab_reader
+    else:
         reader = csv.DictReader(io.StringIO(text))
 
     imported = 0
@@ -127,6 +132,7 @@ async def import_csv(file: UploadFile = File(...), db: AsyncSession = Depends(ge
 
         if not company:
             skipped += 1
+            errors.append(f"Row {i}: missing Company, skipped")
             continue
 
         if not role:
