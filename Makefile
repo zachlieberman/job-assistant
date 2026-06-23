@@ -1,4 +1,4 @@
-.PHONY: up down backend frontend dev db-reset install-dev test test-watch
+.PHONY: up down backend frontend dev db-reset install-dev test test-watch test-frontend
 
 up:
 	docker compose up -d
@@ -25,9 +25,13 @@ install-dev:
 
 test:
 	cd backend && python -m pytest
+	cd frontend && npm test -- --run
 
 test-watch:
 	cd backend && python -m pytest --tb=short -q -f
+
+test-frontend:
+	cd frontend && npm test -- --run
 
 db-reset:
 	docker compose down -v
