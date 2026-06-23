@@ -232,9 +232,12 @@ async def import_csv(file: UploadFile = File(...), db: AsyncSession = Depends(ge
             salary_range=(row.get("Salary Range") or "").strip() or None,
         )
         db.add(app)
+<<<<<<< HEAD
         await db.flush()
         for event in _status_events_for(app.id, status):
             db.add(event)
+=======
+>>>>>>> origin/main
         imported += 1
 
     try:
