@@ -1,4 +1,4 @@
-.PHONY: up down backend frontend dev db-reset
+.PHONY: up down backend frontend dev db-reset test
 
 up:
 	docker compose up -d
@@ -19,6 +19,9 @@ down:
 	docker compose down
 	pkill -f "uvicorn app.main" 2>/dev/null || true
 	pkill -f "vite" 2>/dev/null || true
+
+test:
+	cd frontend && npm test -- --run
 
 db-reset:
 	docker compose down -v

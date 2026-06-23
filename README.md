@@ -56,7 +56,24 @@ Or use the Makefile shortcuts:
 ```bash
 make backend   # starts DB + backend
 make frontend  # starts frontend
+make test      # run frontend tests
 ```
+
+## Testing
+
+The frontend has a test suite built with [Vitest](https://vitest.dev/) and [React Testing Library](https://testing-library.com/).
+
+```bash
+# Run all tests
+make test
+
+# Or from the frontend directory:
+cd frontend
+npm test               # watch mode
+npm run test:coverage  # with coverage report
+```
+
+Tests live in `frontend/src/test/` and cover components (`StatusBadge`, `QuestionCard`, `ApplicationTable`), the `useToast` hook, and the `Dashboard` page.
 
 ## Contributing
 
