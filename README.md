@@ -73,6 +73,10 @@ gh pr create
 
 - **Profile** — store your LinkedIn, GitHub, and multiple resumes
 - **Application Tracker** — manage applications through a status pipeline (Applied → Phone Screen → Technical → Offer / Rejected)
+  - Search by company or role
+  - Sort by any column (Company, Role, Status, Applied date), defaulting to most recent first
+  - Import applications from a CSV file (tab or comma delimited, Excel-compatible)
+  - Export the current filtered/sorted view to a CSV file
 - **Resume Tailoring** — pick a resume, tailor it to a job description with keyword analysis
 - **Cover Letter Generation** — generate cover letters in professional, conversational, or enthusiastic tone
 - **Interview Prep** — generate behavioral, technical, and culture-fit questions tailored to your resume
@@ -90,5 +94,6 @@ Interactive docs at `http://localhost:8000/docs`
 | POST | `/cover-letter/generate` | Generate a cover letter |
 | GET/POST | `/applications` | List or create applications |
 | GET/PUT/DELETE | `/applications/{id}` | Manage an application |
+| POST | `/applications/import-csv` | Bulk import applications from a CSV file |
 | POST | `/interview/prep` | Generate interview questions |
 | GET | `/health` | Health check |
