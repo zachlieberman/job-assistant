@@ -7,6 +7,7 @@ const STATUSES = ['applied', 'phone_screen', 'technical', 'offer', 'rejected']
 export default function Dashboard() {
   const [applications, setApplications] = useState<Application[]>([])
   const [statusFilter, setStatusFilter] = useState('')
+  const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [importMsg, setImportMsg] = useState<string | null>(null)
@@ -41,6 +42,13 @@ export default function Dashboard() {
     }
   }
 
+  const filtered = search.trim()
+    ? applications.filter((a) => {
+        const q = search.toLowerCase()
+        return a.company.toLowerCase().includes(q) || a.role.toLowerCase().includes(q)
+      })
+    : applications
+
   const stats = {
     total: applications.length,
     inProgress: applications.filter((a) => ['phone_screen', 'technical'].includes(a.status)).length,
@@ -70,6 +78,13 @@ export default function Dashboard() {
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Applications</h2>
         <div className="flex items-center gap-3">
+          <input
+            type="text"
+            placeholder="Search company or role…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="bg-gray-900 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30 w-52"
+          />
           <label className="text-sm text-gray-500">Status:</label>
           <select
             value={statusFilter}
@@ -107,7 +122,7 @@ export default function Dashboard() {
       {error && <p className="text-red-400 text-sm">{error}</p>}
       {!loading && !error && (
         <ApplicationTable
-          applications={applications}
+          applications={filtered}
           onStatusChange={(id, newStatus) =>
             setApplications((prev) =>
               prev.map((a) => (a.id === id ? { ...a, status: newStatus } : a))
