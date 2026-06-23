@@ -166,6 +166,12 @@ export const importApplicationsCsv = (file: File) => {
   })
 }
 
+// Sankey / journey data
+export interface SankeyNode { name: string }
+export interface SankeyLink { source: number; target: number; value: number }
+export interface SankeyData { nodes: SankeyNode[]; links: SankeyLink[] }
+export const getApplicationJourney = () => api.get<SankeyData>('/applications/sankey-data')
+
 // Interview
 export const generateInterviewPrep = (
   jobDescription: string,

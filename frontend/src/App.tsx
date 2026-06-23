@@ -5,6 +5,7 @@ import NewApplication from './pages/NewApplication'
 import ApplicationDetail from './pages/ApplicationDetail'
 import InterviewPrep from './pages/InterviewPrep'
 import Profile from './pages/Profile'
+import Journey from './pages/Journey'
 
 export default function App() {
   return (
@@ -16,6 +17,7 @@ export default function App() {
           <Route path="/new" element={<NewApplication />} />
           <Route path="/applications/:id" element={<ApplicationDetail />} />
           <Route path="/interview/:id" element={<InterviewPrep />} />
+          <Route path="/journey" element={<Journey />} />
           <Route path="/profile" element={<Profile />} />
         </Routes>
       </main>

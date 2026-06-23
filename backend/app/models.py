@@ -2,6 +2,7 @@ from sqlalchemy import Column, Integer, String, Text, Date, DateTime, ForeignKey
 from app.database import Base
 
 
+
 class Profile(Base):
     __tablename__ = "profiles"
 
@@ -40,3 +41,13 @@ class Application(Base):
     salary_range = Column(String, nullable=True)
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+
+
+class StatusEvent(Base):
+    __tablename__ = "status_events"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    application_id = Column(Integer, ForeignKey("applications.id", ondelete="CASCADE"), nullable=False)
+    from_status = Column(String, nullable=True)  # None for the initial "applied" creation event
+    to_status = Column(String, nullable=False)
+    changed_at = Column(DateTime, default=func.now())
