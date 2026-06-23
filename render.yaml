@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: job-assistant-backend
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        sync: false  # set manually in Render dashboard
+      - key: ANTHROPIC_API_KEY
+        sync: false  # set manually in Render dashboard
+      - key: CORS_ORIGINS
+        sync: false  # set to your frontend URL once deployed
+
+  - type: web
+    name: job-assistant-frontend
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_URL
+        sync: false  # set to your backend URL once deployed
