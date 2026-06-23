@@ -11,26 +11,6 @@ from app.database import get_db
 from app.models import Application, StatusEvent
 from app.schemas import ApplicationCreate, ApplicationUpdate, ApplicationResponse, ApplicationStatus
 
-STATUS_CHAIN: list[str] = ["applied", "phone_screen", "technical", "offer"]
-
-def _status_events_for(app_id: int, final_status: str) -> list[StatusEvent]:
-    """Return StatusEvent records reconstructing the implied journey to final_status."""
-    chain = STATUS_CHAIN if final_status != "rejected" else STATUS_CHAIN[:1]
-    stop_at = final_status if final_status != "rejected" else "applied"
-
-    events: list[StatusEvent] = []
-    prev: str | None = None
-    for step in chain:
-        events.append(StatusEvent(application_id=app_id, from_status=prev, to_status=step))
-        prev = step
-        if step == stop_at:
-            break
-
-    if final_status == "rejected":
-        events.append(StatusEvent(application_id=app_id, from_status="applied", to_status="rejected"))
-
-    return events
-
 
 CSV_STATUS_MAP: dict[str, str] = {
     "applied": "applied",
@@ -233,8 +213,7 @@ async def import_csv(file: UploadFile = File(...), db: AsyncSession = Depends(ge
         )
         db.add(app)
         await db.flush()
-        for event in _status_events_for(app.id, status):
-            db.add(event)
+        db.add(StatusEvent(application_id=app.id, from_status=None, to_status=status))
         imported += 1
 
     try:
