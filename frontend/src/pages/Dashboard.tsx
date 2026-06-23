@@ -22,6 +22,30 @@ export default function Dashboard() {
       .finally(() => setLoading(false))
   }, [statusFilter])
 
+  const handleExport = () => {
+    const headers = ['Date', 'Company', 'Role', 'Job Posting Link', 'Stage', 'Notes', 'Location', 'Salary Range']
+    const rows = filtered.map((a) => [
+      a.date_applied,
+      a.company,
+      a.role,
+      a.job_url ?? '',
+      a.status,
+      a.notes ?? '',
+      a.location ?? '',
+      a.salary_range ?? '',
+    ])
+    const csv = [headers, ...rows]
+      .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+      .join('\n')
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `applications-${new Date().toISOString().slice(0, 10)}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -130,6 +154,13 @@ export default function Dashboard() {
             className="px-3 py-1.5 text-sm rounded-lg border border-gray-700 text-gray-300 hover:border-indigo-500 hover:text-indigo-400 transition-colors disabled:opacity-50"
           >
             {importing ? 'Importing…' : 'Import CSV'}
+          </button>
+          <button
+            onClick={handleExport}
+            disabled={filtered.length === 0}
+            className="px-3 py-1.5 text-sm rounded-lg border border-gray-700 text-gray-300 hover:border-indigo-500 hover:text-indigo-400 transition-colors disabled:opacity-50"
+          >
+            Export CSV
           </button>
         </div>
       </div>
