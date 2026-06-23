@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom'
 const links = [
   { to: '/', label: 'Dashboard' },
   { to: '/new', label: 'New Application' },
+  { to: '/journey', label: 'Journey' },
   { to: '/profile', label: 'Profile' },
 ]
 
