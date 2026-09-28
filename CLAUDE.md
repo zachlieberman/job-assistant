@@ -61,6 +61,11 @@ React 18 + TypeScript + Vite + Tailwind. React Router v6 for routing. All API ca
 - `pages/InterviewPrep` — loads app by id, checkbox question types, renders QuestionCard list
 - `components/` — Navbar, ApplicationTable, StatusBadge, ResumeEditor, QuestionCard
 
+## Deployment
+- Frontend deploys to Vercel, backend + Postgres deploy to Railway. See [DEPLOYMENT.md](DEPLOYMENT.md).
+- Backend reads `CORS_ORIGINS` (comma-separated) and normalizes `DATABASE_URL` to the asyncpg scheme — see `app/main.py` and `app/database.py`.
+- Frontend reads the API base URL from `VITE_API_URL` (`src/api/client.ts`).
+
 ## Git Workflow
 - All development work must be done on a feature branch — never push directly to `main`
 - Open a PR for every change and merge via GitHub

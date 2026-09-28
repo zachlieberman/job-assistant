@@ -5,7 +5,20 @@ import os
 
 load_dotenv()
 
-DATABASE_URL = os.environ["DATABASE_URL"]
+
+def _to_asyncpg_url(url: str) -> str:
+    """Railway (and most managed Postgres providers) hand out a plain
+    postgres:// or postgresql:// URL; SQLAlchemy's async engine needs the
+    asyncpg driver scheme. Leaves other schemes (e.g. sqlite in tests) untouched.
+    """
+    if url.startswith("postgres://"):
+        return "postgresql+asyncpg://" + url[len("postgres://"):]
+    if url.startswith("postgresql://"):
+        return "postgresql+asyncpg://" + url[len("postgresql://"):]
+    return url
+
+
+DATABASE_URL = _to_asyncpg_url(os.environ["DATABASE_URL"])
 
 engine = create_async_engine(DATABASE_URL, echo=False)
 AsyncSessionLocal = async_sessionmaker(engine, expire_on_commit=False)
