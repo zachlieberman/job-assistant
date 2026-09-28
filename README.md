@@ -59,6 +59,10 @@ make frontend  # starts frontend
 make test      # run frontend tests
 ```
 
+## Deployment
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for deploying the frontend to Vercel and the backend + Postgres to Railway.
+
 ## Testing
 
 ```bash

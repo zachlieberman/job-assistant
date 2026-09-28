@@ -19,9 +19,22 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Job Application Assistant", lifespan=lifespan)
 
+_DEFAULT_ORIGIN = "http://localhost:5173"
+
+
+def _parse_cors_origins(raw: str, default: str) -> list[str]:
+    """Comma-separated origins from env, falling back to `default` if the
+    result would otherwise be empty (e.g. CORS_ORIGINS set to "" or ",").
+    """
+    origins = [origin.strip() for origin in raw.split(",") if origin.strip()]
+    return origins or [default]
+
+
+cors_origins = _parse_cors_origins(os.getenv("CORS_ORIGINS", _DEFAULT_ORIGIN), _DEFAULT_ORIGIN)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
