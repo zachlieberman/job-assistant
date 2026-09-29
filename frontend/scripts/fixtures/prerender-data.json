@@ -1,0 +1,37 @@
+{
+  "bio": {
+    "id": 1,
+    "name": "Zachary Lieberman",
+    "title": "Software Engineer",
+    "location": "Los Angeles, CA",
+    "bio": "Sample bio for CI builds.",
+    "email": "ci@example.com",
+    "github_url": "https://github.com/zachlieberman",
+    "linkedin_url": null,
+    "updated_at": ""
+  },
+  "projects": [
+    {
+      "id": 1,
+      "name": "Sample Project",
+      "description": "Fixture data for CI builds.",
+      "tags": [
+        "Go"
+      ],
+      "link": null,
+      "sort_order": 0
+    }
+  ],
+  "experience": [
+    {
+      "id": 1,
+      "role": "Engineer",
+      "company": "Sample Co",
+      "period": "2020",
+      "bullets": [
+        "Fixture data"
+      ],
+      "sort_order": 0
+    }
+  ]
+}

@@ -31,6 +31,11 @@ function withTimeout<T>(request: Promise<T>): Promise<T> {
 
 export const clearApiCache = () => cache.clear()
 
+/** Primes the cache so a first render (prerender or hydration) shows data instead of a skeleton. */
+export const seedApiCache = (cacheKey: string, data: unknown) => {
+  cache.set(cacheKey, data)
+}
+
 function initialState<T>(cacheKey?: string): Resource<T> {
   return cacheKey && cache.has(cacheKey)
     ? { status: 'success', data: cache.get(cacheKey) as T }
