@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { createApplication } from '../api/client'
-
-const inputClass =
-  'bg-gray-900 border border-gray-700 rounded-lg px-3 py-2.5 text-sm text-gray-100 placeholder-gray-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30 transition-colors'
-const labelClass = 'text-xs font-semibold text-gray-500 uppercase tracking-wider'
+import Field from '../components/ui/Field'
+import PageHeader from '../components/ui/PageHeader'
+import { buttonPrimary, inputClass } from '../components/ui/formStyles'
+import { AlertIcon } from '../components/icons'
 
 interface FormState {
   company: string
@@ -15,28 +15,40 @@ interface FormState {
   salaryRange: string
 }
 
+type Errors = Partial<Record<'company' | 'role' | 'jobDescription', string>>
+
+const INITIAL: FormState = { company: '', role: '', jobUrl: '', jobDescription: '', location: '', salaryRange: '' }
+
+export function validate(form: FormState): Errors {
+  const errors: Errors = {}
+  if (!form.company.trim()) errors.company = 'Enter the company name.'
+  if (!form.role.trim()) errors.role = 'Enter the role you applied for.'
+  if (!form.jobDescription.trim()) errors.jobDescription = 'Paste the job description so you can tailor your resume later.'
+  return errors
+}
+
 export default function NewApplication() {
   const navigate = useNavigate()
-  const [form, setForm] = useState<FormState>({
-    company: '',
-    role: '',
-    jobUrl: '',
-    jobDescription: '',
-    location: '',
-    salaryRange: '',
-  })
+  const [form, setForm] = useState<FormState>(INITIAL)
+  const [errors, setErrors] = useState<Errors>({})
   const [saving, setSaving] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [saveError, setSaveError] = useState<string | null>(null)
 
   function setField<K extends keyof FormState>(field: K) {
-    return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
-      setForm((f) => ({ ...f, [field]: e.target.value }))
+    return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      const value = e.target.value
+      setForm((f) => ({ ...f, [field]: value }))
+      setErrors((prev) => (field in prev ? { ...prev, [field]: undefined } : prev))
+    }
   }
 
-  async function handleSave() {
-    if (!form.company || !form.role || !form.jobDescription) return
+  async function handleSave(e: React.FormEvent) {
+    e.preventDefault()
+    const found = validate(form)
+    setErrors(found)
+    if (Object.keys(found).length > 0) return
     setSaving(true)
-    setError(null)
+    setSaveError(null)
     try {
       const res = await createApplication({
         company: form.company,
@@ -48,96 +60,50 @@ export default function NewApplication() {
       })
       navigate(`/tracker/applications/${res.data.id}`, { state: { created: true } })
     } catch {
-      setError('Failed to save application.')
+      setSaveError('Failed to save application. Check your connection and try again — your entries are still here.')
       setSaving(false)
     }
   }
 
-  const canSave = !saving && form.company && form.role && form.jobDescription
-
   return (
-    <div className="flex flex-col gap-8 max-w-3xl">
-      <div>
-        <h1 className="text-2xl font-bold text-white">New Application</h1>
-        <p className="text-gray-500 text-sm mt-1">
-          Add the job details — you can tailor your resume and generate a cover letter after saving.
+    <form onSubmit={handleSave} noValidate className="flex max-w-3xl flex-col gap-5">
+      <PageHeader description="Add the job details. You can tailor your resume and write a cover letter after saving." />
+
+      <div className="flex flex-col gap-5 rounded-panel border border-line bg-surface p-4 md:p-6">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Company" required error={errors.company}>
+            <input value={form.company} onChange={setField('company')} placeholder="Acme Corp" className={inputClass} />
+          </Field>
+          <Field label="Role" required error={errors.role}>
+            <input value={form.role} onChange={setField('role')} placeholder="Software Engineer" className={inputClass} />
+          </Field>
+          <Field label="Location">
+            <input value={form.location} onChange={setField('location')} placeholder="Remote, New York, NY…" className={inputClass} />
+          </Field>
+          <Field label="Salary range">
+            <input value={form.salaryRange} onChange={setField('salaryRange')} placeholder="$120k – $160k" className={inputClass} />
+          </Field>
+          <Field label="Job URL" className="sm:col-span-2">
+            <input value={form.jobUrl} onChange={setField('jobUrl')} placeholder="https://…" inputMode="url" className={inputClass} />
+          </Field>
+        </div>
+        <Field label="Job description" required error={errors.jobDescription}>
+          <textarea value={form.jobDescription} onChange={setField('jobDescription')} rows={12} placeholder="Paste the full job description here…" className={`${inputClass} resize-y`} />
+        </Field>
+      </div>
+
+      {saveError && (
+        <p role="alert" className="flex items-center gap-2 text-sm text-brand-text">
+          <AlertIcon size={16} className="shrink-0" />
+          {saveError}
         </p>
-      </div>
-
-      <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 flex flex-col gap-5">
-        <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Job Details</h2>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div className="flex flex-col gap-1.5">
-            <label className={labelClass}>Company *</label>
-            <input
-              value={form.company}
-              onChange={setField('company')}
-              placeholder="Acme Corp"
-              className={inputClass}
-            />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <label className={labelClass}>Role *</label>
-            <input
-              value={form.role}
-              onChange={setField('role')}
-              placeholder="Software Engineer"
-              className={inputClass}
-            />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <label className={labelClass}>Location</label>
-            <input
-              value={form.location}
-              onChange={setField('location')}
-              placeholder="Remote, New York, NY..."
-              className={inputClass}
-            />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <label className={labelClass}>Salary Range</label>
-            <input
-              value={form.salaryRange}
-              onChange={setField('salaryRange')}
-              placeholder="$120k – $160k"
-              className={inputClass}
-            />
-          </div>
-          <div className="flex flex-col gap-1.5 col-span-2">
-            <label className={labelClass}>Job URL</label>
-            <input
-              value={form.jobUrl}
-              onChange={setField('jobUrl')}
-              placeholder="https://..."
-              className={inputClass}
-            />
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-1.5">
-          <label className={labelClass}>Job Description *</label>
-          <textarea
-            value={form.jobDescription}
-            onChange={setField('jobDescription')}
-            rows={12}
-            placeholder="Paste the full job description here..."
-            className={`${inputClass} resize-y`}
-          />
-        </div>
-      </div>
-
-      {error && <p className="text-red-400 text-sm">{error}</p>}
+      )}
 
       <div className="flex justify-end">
-        <button
-          onClick={handleSave}
-          disabled={!canSave}
-          className="bg-emerald-700 hover:bg-emerald-600 disabled:opacity-40 disabled:cursor-not-allowed px-5 py-2.5 rounded-lg text-sm font-medium transition-colors"
-        >
-          {saving ? 'Saving...' : 'Save Application →'}
+        <button type="submit" disabled={saving} className={buttonPrimary}>
+          {saving ? 'Saving…' : 'Save application'}
         </button>
       </div>
-    </div>
+    </form>
   )
 }

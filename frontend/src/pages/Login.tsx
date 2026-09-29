@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import { login, setAuthToken } from '../api/client'
+import Field from '../components/ui/Field'
+import { buttonPrimary, inputClass } from '../components/ui/formStyles'
 
 export default function Login() {
   const navigate = useNavigate()
@@ -35,36 +37,34 @@ export default function Login() {
   }
 
   return (
-    <div className="max-w-sm mx-auto mt-16">
-      <h1 className="text-2xl font-bold text-white mb-6">Sign In</h1>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <div>
-          <label className="block text-sm text-gray-400 mb-1">Username</label>
-          <input
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            className="w-full bg-gray-900 border border-gray-800 rounded-lg px-3 py-2 text-sm text-gray-100 focus:outline-none focus:border-indigo-500"
-            autoFocus
-          />
-        </div>
-        <div>
-          <label className="block text-sm text-gray-400 mb-1">Password</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full bg-gray-900 border border-gray-800 rounded-lg px-3 py-2 text-sm text-gray-100 focus:outline-none focus:border-indigo-500"
-          />
-        </div>
-        {error && <p className="text-sm text-red-400">{error}</p>}
-        <button
-          type="submit"
-          disabled={submitting}
-          className="bg-indigo-500 hover:bg-indigo-400 disabled:opacity-50 text-white text-sm font-medium py-2 rounded-lg transition-colors"
-        >
-          {submitting ? 'Signing in...' : 'Sign In'}
-        </button>
-      </form>
+    <div className="mx-auto mt-8 w-full max-w-sm md:mt-20">
+      <div className="rounded-panel border border-line bg-surface p-6">
+        <h1 className="text-xl font-semibold tracking-tight text-fg">Sign in</h1>
+        <p className="mb-6 mt-1 text-sm text-muted">Your applications are private to you.</p>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
+          <Field label="Username">
+            <input
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className={inputClass}
+              autoComplete="username"
+              autoFocus
+            />
+          </Field>
+          <Field label="Password" error={error || null}>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className={inputClass}
+              autoComplete="current-password"
+            />
+          </Field>
+          <button type="submit" disabled={submitting} className={`${buttonPrimary} mt-1 w-full`}>
+            {submitting ? 'Signing in…' : 'Sign in'}
+          </button>
+        </form>
+      </div>
     </div>
   )
 }

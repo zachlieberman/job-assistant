@@ -1,7 +1,12 @@
-import { useState, useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { getApplication, generateInterviewPrep, getResume, Application, InterviewQuestion } from '../api/client'
 import QuestionCard from '../components/QuestionCard'
+import ErrorPanel from '../components/ui/ErrorPanel'
+import PageHeader from '../components/ui/PageHeader'
+import { LoadingRegion, Skeleton } from '../components/ui/Skeleton'
+import { buttonPrimary } from '../components/ui/formStyles'
+import { CheckIcon } from '../components/icons'
 
 const QUESTION_TYPES = ['behavioral', 'technical', 'culture'] as const
 
@@ -11,25 +16,27 @@ export default function InterviewPrep() {
   const [selectedTypes, setSelectedTypes] = useState<string[]>(['behavioral'])
   const [questions, setQuestions] = useState<InterviewQuestion[]>([])
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [loadError, setLoadError] = useState<string | null>(null)
+  const [genError, setGenError] = useState<string | null>(null)
 
-  useEffect(() => {
+  const load = useCallback(() => {
     if (!id) return
+    setLoadError(null)
     getApplication(id)
       .then((res) => setApp(res.data))
-      .catch(() => setError('Failed to load application.'))
+      .catch(() => setLoadError('Failed to load application.'))
   }, [id])
 
+  useEffect(load, [load])
+
   function toggleType(type: string) {
-    setSelectedTypes((prev) =>
-      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type],
-    )
+    setSelectedTypes((prev) => (prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]))
   }
 
   async function handleGenerate() {
     if (!selectedTypes.length || !app) return
     setLoading(true)
-    setError(null)
+    setGenError(null)
     try {
       let resumeText = app.tailored_resume ?? ''
       if (!resumeText && app.resume_id) {
@@ -39,56 +46,72 @@ export default function InterviewPrep() {
       const res = await generateInterviewPrep(app.job_description, resumeText, selectedTypes)
       setQuestions(res.data.questions)
     } catch {
-      setError('Failed to generate questions.')
+      setGenError('Failed to generate questions.')
     } finally {
       setLoading(false)
     }
   }
 
-  if (!app && !error) return <p className="text-gray-500">Loading...</p>
-  if (error && !app) return <p className="text-red-400">{error}</p>
+  if (loadError && !app) {
+    return <ErrorPanel title={loadError} detail="Check that the API is running and the application still exists, then try again." onRetry={load} />
+  }
+  if (!app) {
+    return (
+      <LoadingRegion label="Loading application…">
+        <Skeleton className="h-[200px] rounded-panel" />
+      </LoadingRegion>
+    )
+  }
 
   return (
-    <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-bold">Interview Prep</h1>
-        <p className="text-gray-400">{app!.company} — {app!.role}</p>
-      </div>
+    <div className="flex max-w-3xl flex-col gap-5">
+      <PageHeader title={`${app.company} — ${app.role}`} description="Practice questions based on this job description and your resume." />
 
-      <div className="flex flex-col gap-2">
-        <p className="text-sm text-gray-400">Select question types:</p>
-        <div className="flex gap-3">
-          {QUESTION_TYPES.map((type) => (
-            <label key={type} className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={selectedTypes.includes(type)}
-                onChange={() => toggleType(type)}
-                className="accent-indigo-500"
-              />
-              <span className="text-sm capitalize">{type}</span>
-            </label>
-          ))}
+      <fieldset className="flex flex-col gap-3 rounded-panel border border-line bg-surface p-4 md:p-5">
+        <legend className="px-1 text-sm font-medium text-fg">Question types</legend>
+        <div className="flex flex-wrap gap-2">
+          {QUESTION_TYPES.map((type) => {
+            const checked = selectedTypes.includes(type)
+            return (
+              <label
+                key={type}
+                className={`flex min-h-[44px] cursor-pointer items-center gap-2 rounded-control border px-3 text-sm capitalize transition-colors duration-150 focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-brand-text md:min-h-[36px] ${
+                  checked ? 'border-brand-text bg-brand/15 text-brand-text' : 'border-field text-fg hover:bg-raised'
+                }`}
+              >
+                <input type="checkbox" checked={checked} onChange={() => toggleType(type)} className="sr-only" />
+                {checked && <CheckIcon size={15} />}
+                {type}
+              </label>
+            )
+          })}
         </div>
-      </div>
+        <button type="button" onClick={handleGenerate} disabled={loading || !selectedTypes.length} className={`${buttonPrimary} w-fit`}>
+          {loading ? 'Generating…' : 'Generate questions'}
+        </button>
+        {!selectedTypes.length && <p className="text-sm text-muted">Choose at least one question type to continue.</p>}
+      </fieldset>
 
-      <button
-        onClick={handleGenerate}
-        disabled={loading || !selectedTypes.length}
-        className="w-fit bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 px-5 py-2 rounded text-sm font-medium transition-colors"
-      >
-        {loading ? 'Generating...' : 'Generate Questions'}
-      </button>
+      {genError && (
+        <ErrorPanel title={genError} detail="The AI service didn't return questions. Try again in a moment." onRetry={handleGenerate} />
+      )}
 
-      {error && <p className="text-red-400 text-sm">{error}</p>}
+      {loading && (
+        <LoadingRegion label="Generating questions…">
+          <div className="flex flex-col gap-3">
+            <Skeleton className="h-[110px] rounded-panel" />
+            <Skeleton className="h-[110px] rounded-panel" />
+          </div>
+        </LoadingRegion>
+      )}
 
-      {questions.length > 0 && (
-        <div className="flex flex-col gap-3">
-          <h2 className="text-lg font-semibold">{questions.length} Questions</h2>
+      {!loading && questions.length > 0 && (
+        <section aria-labelledby="questions-title" className="flex flex-col gap-3">
+          <h2 id="questions-title" className="text-base font-semibold text-fg">{questions.length} questions</h2>
           {questions.map((q, i) => (
             <QuestionCard key={i} question={q.question} type={q.type} tip={q.tip} />
           ))}
-        </div>
+        </section>
       )}
     </div>
   )

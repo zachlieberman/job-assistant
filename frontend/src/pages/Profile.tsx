@@ -8,23 +8,20 @@ import {
   deleteResume,
   Resume,
 } from '../api/client'
+import ResumeForm, { ResumeFormState } from '../components/profile/ResumeForm'
+import Field from '../components/ui/Field'
+import PageHeader from '../components/ui/PageHeader'
+import ErrorPanel from '../components/ui/ErrorPanel'
+import { PlusIcon, TrashIcon } from '../components/icons'
+import { buttonGhost, buttonPrimary, buttonSecondary, inputClass } from '../components/ui/formStyles'
 import Toast from '../components/Toast'
 import { useToast } from '../hooks/useToast'
 
-const inputClass =
-  'bg-gray-900 border border-gray-700 rounded-lg px-3 py-2.5 text-sm text-gray-100 placeholder-gray-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30 transition-colors'
-const labelClass = 'text-xs font-semibold text-gray-500 uppercase tracking-wider'
-
-interface ResumeFormState {
-  name: string
-  content: string
-}
 
 export default function Profile() {
   const [linkedin, setLinkedin] = useState('')
   const [github, setGithub] = useState('')
   const [profileSaving, setProfileSaving] = useState(false)
-  const [profileSaved, setProfileSaved] = useState(false)
 
   const [resumes, setResumes] = useState<Resume[]>([])
   const [editingId, setEditingId] = useState<number | null>(null)
@@ -45,14 +42,11 @@ export default function Profile() {
 
   async function handleSaveProfile() {
     setProfileSaving(true)
-    setProfileSaved(false)
     try {
       await updateProfile({
         linkedin_url: linkedin || null,
         github_url: github || null,
       })
-      setProfileSaved(true)
-      setTimeout(() => setProfileSaved(false), 2000)
       showToast('Profile saved')
     } catch {
       setError('Failed to save profile.')
@@ -112,174 +106,82 @@ export default function Profile() {
   }
 
   return (
-    <div className="flex flex-col gap-8 max-w-3xl">
-      <div>
-        <h1 className="text-2xl font-bold text-white">Profile</h1>
-        <p className="text-gray-500 text-sm mt-1">Your information used across all applications.</p>
-      </div>
+    <div className="flex max-w-3xl flex-col gap-5">
+      <PageHeader description="Your links and resumes, used across all applications." />
 
-      {/* Profile info */}
-      <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 flex flex-col gap-5">
-        <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Links</h2>
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col gap-1.5">
-            <label className={labelClass}>LinkedIn URL</label>
-            <input
-              value={linkedin}
-              onChange={(e) => setLinkedin(e.target.value)}
-              placeholder="https://linkedin.com/in/yourname"
-              className={inputClass}
-            />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <label className={labelClass}>GitHub URL</label>
-            <input
-              value={github}
-              onChange={(e) => setGithub(e.target.value)}
-              placeholder="https://github.com/yourname"
-              className={inputClass}
-            />
-          </div>
+      <section aria-labelledby="links-title" className="flex flex-col gap-4 rounded-panel border border-line bg-surface p-4 md:p-6">
+        <h2 id="links-title" className="text-base font-semibold text-fg">Links</h2>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="LinkedIn URL">
+            <input value={linkedin} onChange={(e) => setLinkedin(e.target.value)} placeholder="https://linkedin.com/in/yourname" inputMode="url" className={inputClass} />
+          </Field>
+          <Field label="GitHub URL">
+            <input value={github} onChange={(e) => setGithub(e.target.value)} placeholder="https://github.com/yourname" inputMode="url" className={inputClass} />
+          </Field>
         </div>
-        <div className="flex items-center gap-3">
-          <button
-            onClick={handleSaveProfile}
-            disabled={profileSaving}
-            className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-          >
-            {profileSaving ? 'Saving...' : 'Save Profile'}
-          </button>
-          {profileSaved && <span className="text-emerald-400 text-sm">Saved!</span>}
-        </div>
-      </div>
+        <button type="button" onClick={handleSaveProfile} disabled={profileSaving} className={`${buttonPrimary} w-fit`}>
+          {profileSaving ? 'Saving…' : 'Save profile'}
+        </button>
+      </section>
 
-      {/* Resumes */}
-      <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Resumes</h2>
+      <section aria-labelledby="resumes-title" className="flex flex-col gap-4">
+        <div className="flex items-center justify-between gap-3">
+          <h2 id="resumes-title" className="text-base font-semibold text-fg">Resumes</h2>
           {!addingNew && (
-            <button
-              onClick={() => { setAddingNew(true); setEditingId(null) }}
-              className="text-xs bg-indigo-600 hover:bg-indigo-500 px-3 py-1.5 rounded-lg font-medium transition-colors"
-            >
-              + Add Resume
+            <button type="button" onClick={() => { setAddingNew(true); setEditingId(null) }} className={buttonSecondary}>
+              <PlusIcon size={16} />Add resume
             </button>
           )}
         </div>
 
         {addingNew && (
-          <div className="bg-gray-900 border border-indigo-500/40 rounded-xl p-5 flex flex-col gap-4">
-            <h3 className="text-sm font-semibold text-white">New Resume</h3>
-            <div className="flex flex-col gap-1.5">
-              <label className={labelClass}>Name</label>
-              <input
-                value={newForm.name}
-                onChange={(e) => setNewForm((f) => ({ ...f, name: e.target.value }))}
-                placeholder="e.g. Software Engineer Resume"
-                className={inputClass}
-              />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <label className={labelClass}>Content</label>
-              <textarea
-                value={newForm.content}
-                onChange={(e) => setNewForm((f) => ({ ...f, content: e.target.value }))}
-                rows={12}
-                placeholder="Paste your resume text here..."
-                className={`${inputClass} resize-y font-mono`}
-              />
-            </div>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={handleAddResume}
-                disabled={resumeSaving || !newForm.name || !newForm.content}
-                className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-              >
-                {resumeSaving ? 'Saving...' : 'Save Resume'}
-              </button>
-              <button
-                onClick={() => { setAddingNew(false); setNewForm({ name: '', content: '' }) }}
-                className="text-gray-400 hover:text-white text-sm transition-colors"
-              >
-                Cancel
-              </button>
-            </div>
+          <div className="rounded-panel border border-brand-text/50 bg-surface p-4 md:p-5">
+            <ResumeForm
+              title="New resume"
+              value={newForm}
+              onChange={setNewForm}
+              onSave={handleAddResume}
+              onCancel={() => { setAddingNew(false); setNewForm({ name: '', content: '' }) }}
+              saving={resumeSaving}
+              saveLabel="Save resume"
+              canSave={Boolean(newForm.name && newForm.content)}
+              namePlaceholder="e.g. Software Engineer resume"
+            />
           </div>
         )}
 
         {resumes.length === 0 && !addingNew && (
-          <div className="border border-dashed border-gray-800 rounded-xl py-10 text-center">
-            <p className="text-gray-500 text-sm">No resumes yet.</p>
-            <p className="text-gray-600 text-xs mt-1">Add a resume to use it when tailoring applications.</p>
+          <div className="rounded-panel border border-dashed border-field px-4 py-10 text-center">
+            <p className="font-medium text-fg">No resumes yet.</p>
+            <p className="mt-1 text-sm text-muted">Add a resume so you can tailor it to each job.</p>
           </div>
         )}
 
         {resumes.map((resume) => (
-          <div key={resume.id} className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+          <div key={resume.id} className="overflow-hidden rounded-panel border border-line bg-surface">
             {editingId === resume.id ? (
-              <div className="p-5 flex flex-col gap-4">
-                <div className="flex flex-col gap-1.5">
-                  <label className={labelClass}>Name</label>
-                  <input
-                    value={editForm.name}
-                    onChange={(e) => setEditForm((f) => ({ ...f, name: e.target.value }))}
-                    className={inputClass}
-                  />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <label className={labelClass}>Content</label>
-                  <textarea
-                    value={editForm.content}
-                    onChange={(e) => setEditForm((f) => ({ ...f, content: e.target.value }))}
-                    rows={12}
-                    className={`${inputClass} resize-y font-mono`}
-                  />
-                </div>
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={handleUpdateResume}
-                    disabled={resumeSaving}
-                    className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                  >
-                    {resumeSaving ? 'Saving...' : 'Save'}
-                  </button>
-                  <button
-                    onClick={() => setEditingId(null)}
-                    className="text-gray-400 hover:text-white text-sm transition-colors"
-                  >
-                    Cancel
-                  </button>
-                </div>
+              <div className="p-4 md:p-5">
+                <ResumeForm value={editForm} onChange={setEditForm} onSave={handleUpdateResume} onCancel={() => setEditingId(null)} saving={resumeSaving} saveLabel="Save" />
               </div>
             ) : (
-              <div className="flex items-center justify-between px-5 py-4">
-                <div>
-                  <p className="text-sm font-medium text-white">{resume.name}</p>
-                  <p className="text-xs text-gray-600 mt-0.5">
-                    {resume.content.slice(0, 80).trim()}…
-                  </p>
+              <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 md:px-5">
+                <div className="min-w-0">
+                  <p className="font-medium text-fg">{resume.name}</p>
+                  <p className="truncate text-sm text-muted">{resume.content.slice(0, 80).trim()}…</p>
                 </div>
-                <div className="flex items-center gap-2 ml-4 shrink-0">
-                  <button
-                    onClick={() => startEdit(resume)}
-                    className="text-xs text-indigo-400 hover:text-indigo-300 px-2.5 py-1 rounded border border-indigo-500/30 hover:border-indigo-400/50 transition-colors"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDeleteResume(resume.id)}
-                    className="text-xs text-red-400 hover:text-red-300 px-2.5 py-1 rounded border border-red-500/20 hover:border-red-400/40 transition-colors"
-                  >
-                    Delete
+                <div className="flex shrink-0 items-center gap-2">
+                  <button type="button" onClick={() => startEdit(resume)} className={buttonSecondary}>Edit</button>
+                  <button type="button" onClick={() => handleDeleteResume(resume.id)} className={buttonGhost}>
+                    <TrashIcon size={16} />Delete
                   </button>
                 </div>
               </div>
             )}
           </div>
         ))}
-      </div>
+      </section>
 
-      {error && <p className="text-red-400 text-sm">{error}</p>}
+      {error && <ErrorPanel title={error} detail="Your changes weren't saved. Check your connection and try again." />}
       <Toast message={toast.message} type={toast.type} visible={toast.visible} />
     </div>
   )
