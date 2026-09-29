@@ -5,6 +5,7 @@ import Home from './pages/Home'
 import Projects from './pages/Projects'
 import Experience from './pages/Experience'
 import Contact from './pages/Contact'
+import NotFound from './pages/NotFound'
 import PageErrorBoundary from './components/public/PageErrorBoundary'
 
 const SITE = 'Zachary Lieberman'
@@ -22,7 +23,8 @@ export default function App() {
 
   // Announce client-side navigation: update the title and move focus to <main>.
   useEffect(() => {
-    document.title = TITLES[pathname] ?? SITE
+    // Unknown paths keep the title set by NotFound (child effects run first).
+    if (pathname in TITLES) document.title = TITLES[pathname]
     if (previousPath.current === pathname) return
     previousPath.current = pathname
     mainRef.current?.focus({ preventScroll: true })
@@ -45,6 +47,7 @@ export default function App() {
               <Route path="/projects" element={<Projects />} />
               <Route path="/experience" element={<Experience />} />
               <Route path="/contact" element={<Contact />} />
+              <Route path="*" element={<NotFound />} />
             </Routes>
           </PageErrorBoundary>
         </div>
