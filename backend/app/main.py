@@ -1,4 +1,5 @@
 import os
+import re
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
@@ -46,9 +47,20 @@ def _parse_cors_origins(raw: str, default: str) -> list[str]:
 
 cors_origins = _parse_cors_origins(os.getenv("CORS_ORIGINS", _DEFAULT_ORIGIN), _DEFAULT_ORIGIN)
 
+# `*.vercel.app` is a shared namespace — anyone can register a project like
+# "job-assistant-evil" and get a domain that matches a bare job-assistant*
+# pattern. Preview URLs are actually `<project>-<hash>-<team-slug>.vercel.app`,
+# so scoping the regex to our own (globally unique) team slug means only our
+# team's deployments can ever match, regardless of project name collisions.
+_VERCEL_TEAM_SLUG = os.getenv("VERCEL_TEAM_SLUG", "zach-s-squad")
+_vercel_preview_origin_regex = (
+    rf"^https://job-assistant-[a-zA-Z0-9]+-{re.escape(_VERCEL_TEAM_SLUG)}\.vercel\.app$"
+)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins,
+    allow_origin_regex=_vercel_preview_origin_regex,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
