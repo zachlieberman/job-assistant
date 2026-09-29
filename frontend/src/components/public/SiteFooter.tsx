@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { RESUME_PATH } from '../../content/resume'
 
 const FOOTER_LINKS = [
   { to: '/', label: 'Home' },
@@ -20,6 +21,17 @@ export default function SiteFooter() {
               </Link>
             </li>
           ))}
+          <li>
+            <a
+              href={RESUME_PATH}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex min-h-11 items-center text-base font-bold text-ink hover:text-body"
+            >
+              Resume
+              <span className="sr-only"> (PDF, opens in a new tab)</span>
+            </a>
+          </li>
         </ul>
       </nav>
     </footer>

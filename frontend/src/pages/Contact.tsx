@@ -1,6 +1,7 @@
 import { getPortfolioBio } from '../api/client'
 import type { PortfolioBio } from '../api/client'
 import Seo from '../components/Seo'
+import { RESUME_PATH } from '../content/resume'
 import { CONTACT_SEO } from '../content/seo'
 import AsyncView from '../components/public/AsyncView'
 import bernabeu from '../assets/contact-bernabeu.jpg'
@@ -27,34 +28,38 @@ function contactLinks(bio: PortfolioBio): ContactLink[] {
   )
 }
 
+const RESUME_LINK: ContactLink = { label: 'Resume', href: RESUME_PATH, value: 'Download PDF' }
+
 function ContactList({ links }: { links: ContactLink[] }) {
-  if (!links.length) return <p>No contact details are listed yet.</p>
   return (
-    <ul className="space-y-4">
-      {links.map((link) => {
-        const external = link.href.startsWith('http')
-        return (
-          <li key={link.label}>
-            <a
-              href={link.href}
-              {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-              className="group flex min-h-20 items-center justify-between gap-4 rounded-3xl bg-card px-6 py-4 text-ink transition-colors duration-200 hover:bg-ink hover:text-paper sm:px-8"
-            >
-              <span>
-                <span className="block text-base opacity-75">{link.label}</span>
-                <span className="block break-all text-xl font-bold sm:text-2xl">{link.value}</span>
-                {external && <span className="sr-only">(opens in a new tab)</span>}
-              </span>
-              <ArrowUpRight
-                width={28}
-                height={28}
-                className="shrink-0 transition-transform duration-200 group-hover:-translate-y-1 group-hover:translate-x-1"
-              />
-            </a>
-          </li>
-        )
-      })}
-    </ul>
+    <>
+      {!links.length && <p className="mb-4">No contact details are listed yet.</p>}
+      <ul className="space-y-4">
+        {[...links, RESUME_LINK].map((link) => {
+          const external = link.href.startsWith('http') || link.href.endsWith('.pdf')
+          return (
+            <li key={link.label}>
+              <a
+                href={link.href}
+                {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                className="group flex min-h-20 items-center justify-between gap-4 rounded-3xl bg-card px-6 py-4 text-ink transition-colors duration-200 hover:bg-ink hover:text-paper sm:px-8"
+              >
+                <span>
+                  <span className="block text-base opacity-75">{link.label}</span>
+                  <span className="block break-all text-xl font-bold sm:text-2xl">{link.value}</span>
+                  {external && <span className="sr-only">(opens in a new tab)</span>}
+                </span>
+                <ArrowUpRight
+                  width={28}
+                  height={28}
+                  className="shrink-0 transition-transform duration-200 group-hover:-translate-y-1 group-hover:translate-x-1"
+                />
+              </a>
+            </li>
+          )
+        })}
+      </ul>
+    </>
   )
 }
 

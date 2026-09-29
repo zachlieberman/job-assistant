@@ -15,7 +15,7 @@ describe('SiteFooter', () => {
     const hrefs = within(nav)
       .getAllByRole('link')
       .map((link) => link.getAttribute('href'))
-    expect(hrefs).toEqual(['/', '/projects', '/experience', '/contact'])
+    expect(hrefs).toEqual(['/', '/projects', '/experience', '/contact', '/Zachary-Lieberman-Resume.pdf'])
   })
 })
 
