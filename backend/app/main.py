@@ -35,6 +35,11 @@ cors_origins = _parse_cors_origins(os.getenv("CORS_ORIGINS", _DEFAULT_ORIGIN), _
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins,
+    # Vercel gives every branch/PR preview deployment a unique, unpredictable
+    # URL (e.g. job-assistant-<hash>-zach-s-squad.vercel.app), so an exact
+    # allowlist can't keep up — allow any preview subdomain for this project
+    # instead of hand-adding CORS_ORIGINS after every push.
+    allow_origin_regex=r"^https://job-assistant(-[a-zA-Z0-9-]+)?\.vercel\.app$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
