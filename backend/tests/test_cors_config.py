@@ -43,6 +43,27 @@ def test_vercel_preview_regex_matches_tracker_project_previews():
     )
 
 
+def test_vercel_preview_regex_matches_branch_alias_previews():
+    # Per-branch aliases carry `-git-<slugified-branch>` instead of a hash, and
+    # the branch slug can contain hyphens (e.g. PR preview links).
+    assert re.match(
+        _vercel_preview_origin_regex,
+        "https://job-assistant-git-feat-seo-crawl-files-zach-s-squad.vercel.app",
+    )
+    assert re.match(
+        _vercel_preview_origin_regex,
+        "https://job-assistant-ow59-git-feat-seo-crawl-files-zach-s-squad.vercel.app",
+    )
+    assert not re.match(
+        _vercel_preview_origin_regex,
+        "https://job-assistant-git-feat-seo-crawl-files-other-team.vercel.app",
+    )
+    assert not re.match(
+        _vercel_preview_origin_regex,
+        "https://job-assistant-git-feat-zach-s-squad.vercel.app.evil.com",
+    )
+
+
 def test_vercel_preview_regex_rejects_extra_segments_and_wrong_scheme():
     assert not re.match(
         _vercel_preview_origin_regex, "https://job-assistant-a-b-c-zach-s-squad.vercel.app"
