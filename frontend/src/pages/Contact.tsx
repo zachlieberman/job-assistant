@@ -1,6 +1,8 @@
 import { getPortfolioBio } from '../api/client'
 import type { PortfolioBio } from '../api/client'
 import AsyncView from '../components/public/AsyncView'
+import bernabeu from '../assets/contact-bernabeu.jpg'
+import Photo from '../components/public/Photo'
 import { ArrowUpRight } from '../components/public/icons'
 import { ContactSkeleton } from '../components/public/PageSkeletons'
 import { useApiResource } from '../hooks/useApiResource'
@@ -66,10 +68,19 @@ export default function Contact() {
         Happy to talk about opportunities, projects, or anything else. Email is the fastest way to
         reach me.
       </p>
-      <div className="mt-12 max-w-2xl">
-        <AsyncView resource={state} onRetry={retry} what="the contact details" fallback={<ContactSkeleton />}>
-          {(bio) => <ContactList links={contactLinks(bio)} />}
-        </AsyncView>
+      <div className="mt-12 grid gap-12 lg:grid-cols-12 lg:items-start">
+        <div className="lg:col-span-7">
+          <AsyncView resource={state} onRetry={retry} what="the contact details" fallback={<ContactSkeleton />}>
+            {(bio) => <ContactList links={contactLinks(bio)} />}
+          </AsyncView>
+        </div>
+        <div className="lg:col-span-4 lg:col-start-9">
+          <Photo
+            src={bernabeu}
+            alt="Zachary smiling in a blue polo, leaning on barriers in front of the pitch at the Santiago Bernabéu stadium"
+            className="max-w-md"
+          />
+        </div>
       </div>
     </div>
   )

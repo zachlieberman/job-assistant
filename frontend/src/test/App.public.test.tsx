@@ -57,6 +57,7 @@ describe('App.public', () => {
     expect(screen.getByText('Available for work')).toBeInTheDocument()
     expect(screen.getByText('Software engineer, based in New York.')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'See my work' })).toHaveAttribute('href', '/projects')
+    expect(screen.getByRole('img', { name: /holding his small brown dog/ })).toHaveAttribute('width', '768')
     expect(document.title).toBe('Zachary Lieberman')
   })
 
@@ -119,6 +120,7 @@ describe('App.public', () => {
     expect(email).toHaveAttribute('href', 'mailto:zach@example.com')
     expect(screen.getByRole('link', { name: /github.com\/zach/ })).toHaveAttribute('target', '_blank')
     expect(screen.queryByText('LinkedIn')).not.toBeInTheDocument()
+    expect(screen.getByRole('img', { name: /Bernabéu/ })).toBeInTheDocument()
   })
 
   it('says so when no contact details are set', async () => {

@@ -1,6 +1,8 @@
 import type { PortfolioBio } from '../../api/client'
 import { HEADLINE_LEAD, HEADLINE_TAIL } from '../../content/hero'
 import { stagger } from '../../lib/publicUtils'
+import sunset from '../../assets/home-sunset.jpg'
+import Photo from './Photo'
 import PillLink from './PillLink'
 
 /** Home hero. The children animate in as one staggered sequence (`.rise`). */
@@ -28,6 +30,11 @@ export default function Hero({ bio }: { bio: PortfolioBio }) {
         <div className="rise mt-8 lg:col-span-5 lg:col-start-8 lg:mt-0" style={stagger(4)}>
           <p className="font-bold text-ink">{role}</p>
           <p className="mt-3 max-w-prose whitespace-pre-line">{bio.bio}</p>
+          <Photo
+            src={sunset}
+            alt="Zachary smiling and holding his small brown dog outdoors at a bright orange sunset by the ocean"
+            className="mt-10 max-w-md"
+          />
         </div>
       </div>
     </section>
