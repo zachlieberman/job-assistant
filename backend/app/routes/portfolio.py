@@ -6,6 +6,7 @@ from typing import List
 
 from app.auth import require_auth
 from app.database import get_db
+from app.services.deploy_hook import rebuild_on_success
 from app.models import PortfolioBio, PortfolioExperience, PortfolioProject
 from app.schemas import (
     PortfolioBioResponse,
@@ -19,6 +20,9 @@ from app.schemas import (
 )
 
 router = APIRouter(prefix="/portfolio", tags=["portfolio"])
+
+# Every write needs auth, and a successful one queues a rebuild of the prerendered public site.
+WRITE_DEPENDENCIES = [Depends(require_auth), Depends(rebuild_on_success)]
 
 
 # Fixed primary key for the singleton bio row so a concurrent duplicate
@@ -50,7 +54,7 @@ async def get_bio(db: AsyncSession = Depends(get_db)):
     return await _get_or_create_bio(db)
 
 
-@router.put("/bio", response_model=PortfolioBioResponse, dependencies=[Depends(require_auth)])
+@router.put("/bio", response_model=PortfolioBioResponse, dependencies=WRITE_DEPENDENCIES)
 async def update_bio(payload: PortfolioBioUpdate, db: AsyncSession = Depends(get_db)):
     bio = await _get_or_create_bio(db)
     for field, value in payload.model_dump(exclude_unset=True).items():
@@ -70,7 +74,7 @@ async def list_projects(db: AsyncSession = Depends(get_db)):
     "/projects",
     response_model=PortfolioProjectResponse,
     status_code=201,
-    dependencies=[Depends(require_auth)],
+    dependencies=WRITE_DEPENDENCIES,
 )
 async def create_project(payload: PortfolioProjectCreate, db: AsyncSession = Depends(get_db)):
     project = PortfolioProject(**payload.model_dump())
@@ -83,7 +87,7 @@ async def create_project(payload: PortfolioProjectCreate, db: AsyncSession = Dep
 @router.put(
     "/projects/{project_id}",
     response_model=PortfolioProjectResponse,
-    dependencies=[Depends(require_auth)],
+    dependencies=WRITE_DEPENDENCIES,
 )
 async def update_project(
     project_id: int, payload: PortfolioProjectUpdate, db: AsyncSession = Depends(get_db)
@@ -99,7 +103,7 @@ async def update_project(
     return project
 
 
-@router.delete("/projects/{project_id}", status_code=204, dependencies=[Depends(require_auth)])
+@router.delete("/projects/{project_id}", status_code=204, dependencies=WRITE_DEPENDENCIES)
 async def delete_project(project_id: int, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(PortfolioProject).where(PortfolioProject.id == project_id))
     project = result.scalar_one_or_none()
@@ -119,7 +123,7 @@ async def list_experience(db: AsyncSession = Depends(get_db)):
     "/experience",
     response_model=PortfolioExperienceResponse,
     status_code=201,
-    dependencies=[Depends(require_auth)],
+    dependencies=WRITE_DEPENDENCIES,
 )
 async def create_experience(payload: PortfolioExperienceCreate, db: AsyncSession = Depends(get_db)):
     entry = PortfolioExperience(**payload.model_dump())
@@ -132,7 +136,7 @@ async def create_experience(payload: PortfolioExperienceCreate, db: AsyncSession
 @router.put(
     "/experience/{experience_id}",
     response_model=PortfolioExperienceResponse,
-    dependencies=[Depends(require_auth)],
+    dependencies=WRITE_DEPENDENCIES,
 )
 async def update_experience(
     experience_id: int, payload: PortfolioExperienceUpdate, db: AsyncSession = Depends(get_db)
@@ -151,7 +155,7 @@ async def update_experience(
 
 
 @router.delete(
-    "/experience/{experience_id}", status_code=204, dependencies=[Depends(require_auth)]
+    "/experience/{experience_id}", status_code=204, dependencies=WRITE_DEPENDENCIES
 )
 async def delete_experience(experience_id: int, db: AsyncSession = Depends(get_db)):
     result = await db.execute(
