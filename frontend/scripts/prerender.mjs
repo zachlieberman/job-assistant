@@ -45,8 +45,26 @@ async function fetchJson(baseUrl, endpoint) {
   throw new Error(`could not fetch ${url}: ${lastError.message}`)
 }
 
+function validate({ bio, projects, experience }) {
+  if (!bio || typeof bio.name !== 'string' || typeof bio.title !== 'string') {
+    throw new Error('The bio must be an object with a name and title.')
+  }
+  if (!Array.isArray(projects) || !Array.isArray(experience)) {
+    throw new Error('Projects and experience must be arrays.')
+  }
+  return { bio, projects, experience }
+}
+
 async function loadPortfolioData() {
   const env = { ...loadEnv('public', root, 'VITE_'), ...process.env }
+
+  // CI builds from a checked-in fixture so they do not depend on a live backend.
+  if (env.PRERENDER_DATA_FILE) {
+    const file = path.resolve(root, env.PRERENDER_DATA_FILE)
+    console.log(`Reading portfolio content from ${file}`)
+    return validate(JSON.parse(await fs.readFile(file, 'utf8')))
+  }
+
   const baseUrl = env.VITE_API_URL?.replace(/\/+$/, '')
   if (!baseUrl) {
     throw new Error('VITE_API_URL is not set. Point it at the backend the site content is read from.')
@@ -57,13 +75,7 @@ async function loadPortfolioData() {
     fetchJson(baseUrl, '/portfolio/projects'),
     fetchJson(baseUrl, '/portfolio/experience'),
   ])
-  if (!bio || typeof bio.name !== 'string' || typeof bio.title !== 'string') {
-    throw new Error('/portfolio/bio did not return a bio with a name and title.')
-  }
-  if (!Array.isArray(projects) || !Array.isArray(experience)) {
-    throw new Error('/portfolio/projects and /portfolio/experience must return arrays.')
-  }
-  return { bio, projects, experience }
+  return validate({ bio, projects, experience })
 }
 
 async function main() {

@@ -107,7 +107,8 @@ The public portfolio is a React SPA, but crawlers, AI bots and link unfurlers
    bundle into `dist-ssr/` (git-ignored, build-only).
 3. `node scripts/prerender.mjs` fetches `/portfolio/bio`, `/portfolio/projects`
    and `/portfolio/experience` from `VITE_API_URL`, renders each route, and
-   writes the finished pages into `dist/`.
+   writes the finished pages into `dist/`. CI sets `PRERENDER_DATA_FILE` to
+   `scripts/fixtures/prerender-data.json` so it builds without a live backend.
 
 Things to know:
 
