@@ -63,4 +63,22 @@ describe('useToast', () => {
     })
     expect(result.current.toast.message).toBe('Keep me')
   })
+
+  it('restarts the hide timer when show() is called again', () => {
+    const { result } = renderHook(() => useToast())
+    act(() => { result.current.show('First') })
+    act(() => { vi.advanceTimersByTime(2000) })
+    act(() => { result.current.show('Second') })
+    act(() => { vi.advanceTimersByTime(2000) })
+    expect(result.current.toast.visible).toBe(true)
+    act(() => { vi.advanceTimersByTime(1500) })
+    expect(result.current.toast.visible).toBe(false)
+  })
+
+  it('clears the pending timer on unmount', () => {
+    const { result, unmount } = renderHook(() => useToast())
+    act(() => { result.current.show('Bye') })
+    unmount()
+    expect(vi.getTimerCount()).toBe(0)
+  })
 })

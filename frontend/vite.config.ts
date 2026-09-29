@@ -23,7 +23,10 @@ export default defineConfig(({ mode }) => {
       postcss: {
         plugins: [
           tailwindcss(
-            path.resolve(__dirname, isTracker ? 'tailwind.config.js' : 'tailwind.public.config.js'),
+            path.resolve(
+              __dirname,
+              isTracker ? 'tailwind.tracker.config.js' : 'tailwind.public.config.js',
+            ),
           ),
           autoprefixer(),
         ],
@@ -43,7 +46,13 @@ export default defineConfig(({ mode }) => {
       coverage: {
         provider: 'v8',
         reporter: ['text', 'html'],
-        exclude: ['src/main.public.tsx', 'src/main.tracker.tsx', 'src/index.css', 'src/public.css'],
+        exclude: [
+          'src/main.public.tsx',
+          'src/main.tracker.tsx',
+          'src/index.css',
+          'src/public.css',
+          'src/tracker.css',
+        ],
       },
     },
   }

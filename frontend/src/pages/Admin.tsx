@@ -1,10 +1,17 @@
-import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useCallback, useEffect, useState } from 'react'
+import BioForm from '../components/admin/BioForm'
+import ExperienceEditor from '../components/admin/ExperienceEditor'
+import ProjectsEditor from '../components/admin/ProjectsEditor'
+import Toast from '../components/Toast'
+import ErrorPanel from '../components/ui/ErrorPanel'
+import { LoadingRegion, Skeleton } from '../components/ui/Skeleton'
+import { AlertIcon } from '../components/icons'
+import { useToast } from '../hooks/useToast'
+import { patchItem } from '../lib/patchItem'
 import {
   PortfolioBio,
   PortfolioExperience,
   PortfolioProject,
-  clearAuthToken,
   createPortfolioExperience,
   createPortfolioProject,
   deletePortfolioExperience,
@@ -17,21 +24,17 @@ import {
   updatePortfolioProject,
 } from '../api/client'
 
-const inputClass =
-  'w-full bg-gray-900 border border-gray-800 rounded-lg px-3 py-2 text-sm text-gray-100 focus:outline-none focus:border-indigo-500'
-
 const ERROR_MESSAGE = 'Something went wrong — check your connection and try again.'
 
 export default function Admin() {
-  const navigate = useNavigate()
   const [bio, setBio] = useState<PortfolioBio | null>(null)
   const [projects, setProjects] = useState<PortfolioProject[]>([])
   const [experience, setExperience] = useState<PortfolioExperience[]>([])
-  const [savedMessage, setSavedMessage] = useState('')
+  const { toast, show: showToast } = useToast()
   const [error, setError] = useState('')
 
-  useEffect(() => {
-    async function load() {
+  const load = useCallback(async () => {
+      setError('')
       try {
         const [bioRes, projectsRes, experienceRes] = await Promise.all([
           getPortfolioBio(),
@@ -44,14 +47,13 @@ export default function Admin() {
       } catch {
         setError('Failed to load portfolio content.')
       }
-    }
-    load()
   }, [])
 
-  function flashSaved() {
-    setSavedMessage('Saved')
-    setTimeout(() => setSavedMessage(''), 1500)
-  }
+  useEffect(() => {
+    load()
+  }, [load])
+
+  const flashSaved = () => showToast('Saved')
 
   async function withErrorHandling(action: () => Promise<void>) {
     try {
@@ -162,279 +164,53 @@ export default function Admin() {
   const handleDeleteExperience = (id: number) =>
     experienceActions.remove(id, 'Delete this experience entry?')
 
-  function handleLogout() {
-    clearAuthToken()
-    navigate('/')
+  if (error && !bio) {
+    return (
+      <ErrorPanel
+        title={error}
+        detail="The portfolio content couldn't be fetched. Check that the backend is running and you're signed in, then try again."
+        onRetry={load}
+      />
+    )
+  }
+  if (!bio) {
+    return (
+      <LoadingRegion label="Loading portfolio content…">
+        <div className="mx-auto flex max-w-3xl flex-col gap-5">
+          <Skeleton className="h-[380px] rounded-panel" />
+          <Skeleton className="h-[240px] rounded-panel" />
+        </div>
+      </LoadingRegion>
+    )
   }
 
   return (
-    <div className="max-w-3xl mx-auto flex flex-col gap-10">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-white">Edit Portfolio</h1>
-        <div className="flex items-center gap-3">
-          {savedMessage && <span className="text-sm text-green-400">{savedMessage}</span>}
-          <button
-            onClick={handleLogout}
-            className="text-sm text-gray-400 hover:text-white transition-colors"
-          >
-            Log Out
-          </button>
-        </div>
-      </div>
+    <div className="mx-auto flex max-w-3xl flex-col gap-5">
+      <p className="text-sm text-muted">Edit the content shown on your public portfolio.</p>
 
       {error && (
-        <p className="text-sm text-red-400 bg-red-500/10 border border-red-500/30 rounded-lg px-4 py-2">
+        <p role="alert" className="flex items-center gap-2 rounded-control border border-line bg-surface px-4 py-3 text-sm text-fg">
+          <AlertIcon size={16} className="shrink-0 text-brand-text" />
           {error}
         </p>
       )}
 
-      {/* Bio section */}
-      {bio && (
-        <section className="bg-gray-900/50 border border-gray-800 rounded-xl p-5">
-          <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">
-            Bio
-          </h2>
-          <form onSubmit={handleSaveBio} className="flex flex-col gap-3">
-            <div className="grid sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs text-gray-500 mb-1">Name</label>
-                <input
-                  className={inputClass}
-                  value={bio.name}
-                  onChange={(e) => setBio({ ...bio, name: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-gray-500 mb-1">Title</label>
-                <input
-                  className={inputClass}
-                  value={bio.title}
-                  onChange={(e) => setBio({ ...bio, title: e.target.value })}
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-xs text-gray-500 mb-1">Location</label>
-              <input
-                className={inputClass}
-                value={bio.location ?? ''}
-                onChange={(e) => setBio({ ...bio, location: e.target.value })}
-              />
-            </div>
-            <div>
-              <label className="block text-xs text-gray-500 mb-1">Bio</label>
-              <textarea
-                className={inputClass}
-                rows={4}
-                value={bio.bio}
-                onChange={(e) => setBio({ ...bio, bio: e.target.value })}
-              />
-            </div>
-            <div className="grid sm:grid-cols-3 gap-3">
-              <div>
-                <label className="block text-xs text-gray-500 mb-1">Email</label>
-                <input
-                  className={inputClass}
-                  value={bio.email ?? ''}
-                  onChange={(e) => setBio({ ...bio, email: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-gray-500 mb-1">GitHub URL</label>
-                <input
-                  className={inputClass}
-                  value={bio.github_url ?? ''}
-                  onChange={(e) => setBio({ ...bio, github_url: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-gray-500 mb-1">LinkedIn URL</label>
-                <input
-                  className={inputClass}
-                  value={bio.linkedin_url ?? ''}
-                  onChange={(e) => setBio({ ...bio, linkedin_url: e.target.value })}
-                />
-              </div>
-            </div>
-            <button
-              type="submit"
-              className="self-start bg-indigo-500 hover:bg-indigo-400 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
-            >
-              Save Bio
-            </button>
-          </form>
-        </section>
-      )}
-
-      {/* Projects section */}
-      <section className="bg-gray-900/50 border border-gray-800 rounded-xl p-5">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">
-            Projects
-          </h2>
-          <button
-            onClick={handleAddProject}
-            className="text-sm text-indigo-400 hover:text-indigo-300 transition-colors"
-          >
-            + Add Project
-          </button>
-        </div>
-        <div className="flex flex-col gap-4">
-          {projects.map((project) => (
-            <div key={project.id} className="border border-gray-800 rounded-lg p-4 flex flex-col gap-2">
-              <input
-                className={inputClass}
-                value={project.name}
-                placeholder="Project name"
-                onChange={(e) =>
-                  setProjects((prev) =>
-                    prev.map((p) => (p.id === project.id ? { ...p, name: e.target.value } : p)),
-                  )
-                }
-              />
-              <textarea
-                className={inputClass}
-                rows={2}
-                value={project.description}
-                placeholder="Description"
-                onChange={(e) =>
-                  setProjects((prev) =>
-                    prev.map((p) =>
-                      p.id === project.id ? { ...p, description: e.target.value } : p,
-                    ),
-                  )
-                }
-              />
-              <input
-                className={inputClass}
-                value={project.tags.join(', ')}
-                placeholder="Tags, comma separated"
-                onChange={(e) =>
-                  setProjects((prev) =>
-                    prev.map((p) =>
-                      p.id === project.id
-                        ? {
-                            ...p,
-                            tags: e.target.value
-                              .split(',')
-                              .map((t) => t.trim())
-                              .filter(Boolean),
-                          }
-                        : p,
-                    ),
-                  )
-                }
-              />
-              <input
-                className={inputClass}
-                value={project.link ?? ''}
-                placeholder="Link (optional)"
-                onChange={(e) =>
-                  setProjects((prev) =>
-                    prev.map((p) => (p.id === project.id ? { ...p, link: e.target.value } : p)),
-                  )
-                }
-              />
-              <div className="flex gap-2 justify-end">
-                <button
-                  onClick={() => handleDeleteProject(project.id)}
-                  className="text-sm text-red-400 hover:text-red-300 transition-colors"
-                >
-                  Delete
-                </button>
-                <button
-                  onClick={() => handleSaveProject(project)}
-                  className="text-sm bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-lg font-medium transition-colors"
-                >
-                  Save
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Experience section */}
-      <section className="bg-gray-900/50 border border-gray-800 rounded-xl p-5">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">
-            Experience
-          </h2>
-          <button
-            onClick={handleAddExperience}
-            className="text-sm text-indigo-400 hover:text-indigo-300 transition-colors"
-          >
-            + Add Job
-          </button>
-        </div>
-        <div className="flex flex-col gap-4">
-          {experience.map((entry) => (
-            <div key={entry.id} className="border border-gray-800 rounded-lg p-4 flex flex-col gap-2">
-              <div className="grid sm:grid-cols-2 gap-2">
-                <input
-                  className={inputClass}
-                  value={entry.role}
-                  placeholder="Role"
-                  onChange={(e) =>
-                    setExperience((prev) =>
-                      prev.map((x) => (x.id === entry.id ? { ...x, role: e.target.value } : x)),
-                    )
-                  }
-                />
-                <input
-                  className={inputClass}
-                  value={entry.company}
-                  placeholder="Company"
-                  onChange={(e) =>
-                    setExperience((prev) =>
-                      prev.map((x) => (x.id === entry.id ? { ...x, company: e.target.value } : x)),
-                    )
-                  }
-                />
-              </div>
-              <input
-                className={inputClass}
-                value={entry.period}
-                placeholder="Period (e.g. Jan 2024 – Present)"
-                onChange={(e) =>
-                  setExperience((prev) =>
-                    prev.map((x) => (x.id === entry.id ? { ...x, period: e.target.value } : x)),
-                  )
-                }
-              />
-              <textarea
-                className={inputClass}
-                rows={4}
-                value={entry.bullets.join('\n')}
-                placeholder="One bullet point per line"
-                onChange={(e) =>
-                  setExperience((prev) =>
-                    prev.map((x) =>
-                      x.id === entry.id
-                        ? { ...x, bullets: e.target.value.split('\n').filter(Boolean) }
-                        : x,
-                    ),
-                  )
-                }
-              />
-              <div className="flex gap-2 justify-end">
-                <button
-                  onClick={() => handleDeleteExperience(entry.id)}
-                  className="text-sm text-red-400 hover:text-red-300 transition-colors"
-                >
-                  Delete
-                </button>
-                <button
-                  onClick={() => handleSaveExperience(entry)}
-                  className="text-sm bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-lg font-medium transition-colors"
-                >
-                  Save
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
+      <BioForm bio={bio} onChange={setBio} onSubmit={handleSaveBio} />
+      <ProjectsEditor
+        projects={projects}
+        onPatch={(id, patch) => setProjects((prev) => patchItem(prev, id, patch))}
+        onAdd={handleAddProject}
+        onSave={handleSaveProject}
+        onDelete={handleDeleteProject}
+      />
+      <ExperienceEditor
+        entries={experience}
+        onPatch={(id, patch) => setExperience((prev) => patchItem(prev, id, patch))}
+        onAdd={handleAddExperience}
+        onSave={handleSaveExperience}
+        onDelete={handleDeleteExperience}
+      />
+      <Toast message={toast.message} type={toast.type} visible={toast.visible} />
     </div>
   )
 }

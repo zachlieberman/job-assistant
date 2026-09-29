@@ -1,30 +1,46 @@
-import { useState, useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { getApplicationJourney, SankeyData } from '../api/client'
-import ApplicationJourneySankey from '../components/ApplicationJourneySankey'
+import TrackerJourneySankey from '../components/TrackerJourneySankey'
+import JourneyFlowTable from '../components/JourneyFlowTable'
+import ErrorPanel from '../components/ui/ErrorPanel'
+import PageHeader from '../components/ui/PageHeader'
+import { LoadingRegion, Skeleton } from '../components/ui/Skeleton'
 
 export default function Journey() {
   const [journeyData, setJourneyData] = useState<SankeyData>({ nodes: [], links: [] })
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
+  const load = useCallback(() => {
+    setLoading(true)
+    setError(null)
     getApplicationJourney()
       .then((res) => setJourneyData(res.data))
+      .catch(() => setError('Failed to load your journey.'))
       .finally(() => setLoading(false))
   }, [])
 
+  useEffect(load, [load])
+
   return (
-    <div className="flex flex-col gap-8">
-      <div>
-        <h1 className="text-2xl font-bold text-white">Application Journey</h1>
-        <p className="text-gray-500 text-sm mt-1">Visualize how your applications flow through each stage.</p>
-      </div>
-      <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
-        {loading ? (
-          <p className="text-gray-500 text-sm">Loading...</p>
-        ) : (
-          <ApplicationJourneySankey data={journeyData} height={420} />
-        )}
-      </div>
+    <div className="flex flex-col gap-5">
+      <PageHeader description="See how your applications flow through each stage." />
+      {error ? (
+        <ErrorPanel title={error} detail="The API didn't respond. Check that the backend is running, then try again." onRetry={load} />
+      ) : (
+        <div className="rounded-panel border border-line bg-surface p-4 md:p-5">
+          {loading ? (
+            <LoadingRegion label="Loading your journey…">
+              <Skeleton className="h-[420px] rounded-control" />
+            </LoadingRegion>
+          ) : (
+            <>
+              <TrackerJourneySankey data={journeyData} height={420} />
+              <JourneyFlowTable data={journeyData} />
+            </>
+          )}
+        </div>
+      )}
     </div>
   )
 }

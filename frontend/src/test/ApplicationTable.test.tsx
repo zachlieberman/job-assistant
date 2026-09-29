@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { MemoryRouter } from 'react-router-dom'
+import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import ApplicationTable from '../components/ApplicationTable'
 import type { Application } from '../api/client'
 
@@ -56,7 +56,7 @@ describe('ApplicationTable', () => {
   it('renders application company and role', () => {
     renderTable()
     expect(screen.getByText('Acme Corp')).toBeInTheDocument()
-    expect(screen.getByText('Engineer')).toBeInTheDocument()
+    expect(screen.getAllByText('Engineer').length).toBeGreaterThan(0)
   })
 
   it('renders date_applied', () => {
@@ -99,5 +99,50 @@ describe('ApplicationTable', () => {
     renderTable({ ...defaultProps, applications: apps })
     expect(screen.getByText('Alpha')).toBeInTheDocument()
     expect(screen.getByText('Beta')).toBeInTheDocument()
+  })
+
+  it('marks the sorted column with aria-sort', () => {
+    renderTable()
+    expect(screen.getByRole('columnheader', { name: /applied/i })).toHaveAttribute('aria-sort', 'descending')
+    expect(screen.getByRole('columnheader', { name: /company/i })).toHaveAttribute('aria-sort', 'none')
+  })
+
+  it('shows the status with an icon and label, not just a colour', () => {
+    renderTable({ ...defaultProps, applications: [mockApp({ status: 'phone_screen' })] })
+    const badge = screen.getAllByText('Phone screen').find((el) => el.querySelector('svg'))
+    expect(badge).toBeTruthy()
+  })
+
+  it('offers a call to action in the empty state', () => {
+    renderTable({ ...defaultProps, applications: [] })
+    expect(screen.getByRole('link', { name: /add your first application/i })).toHaveAttribute('href', '/tracker/new')
+  })
+
+  it('renders a custom empty state when provided', () => {
+    renderTable({ ...defaultProps, applications: [], emptyState: <p>Nothing matched</p> } as Parameters<typeof renderTable>[0])
+    expect(screen.getByText('Nothing matched')).toBeInTheDocument()
+  })
+
+  it('shows an error toast when the status update fails', async () => {
+    const { updateApplication } = await import('../api/client')
+    vi.mocked(updateApplication).mockRejectedValueOnce(new Error('boom'))
+    const onStatusChange = vi.fn()
+    renderTable({ ...defaultProps, onStatusChange })
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'offer' } })
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent(/could not update the status/i))
+    expect(onStatusChange).not.toHaveBeenCalled()
+  })
+
+  it('opens interview prep from the row action', () => {
+    render(
+      <MemoryRouter initialEntries={['/tracker']}>
+        <Routes>
+          <Route path="/tracker" element={<ApplicationTable {...defaultProps} />} />
+          <Route path="/tracker/interview/:id" element={<p>interview page</p>} />
+        </Routes>
+      </MemoryRouter>,
+    )
+    fireEvent.click(screen.getByRole('button', { name: /interview prep for acme corp/i }))
+    expect(screen.getByText('interview page')).toBeInTheDocument()
   })
 })
