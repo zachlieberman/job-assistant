@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, Date, DateTime, ForeignKey, func
+from sqlalchemy import Column, Integer, String, Text, Date, DateTime, ForeignKey, JSON, func
 from app.database import Base
 
 
@@ -39,6 +39,46 @@ class Application(Base):
     notes = Column(Text, nullable=True)
     location = Column(String, nullable=True)
     salary_range = Column(String, nullable=True)
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+
+
+class PortfolioBio(Base):
+    __tablename__ = "portfolio_bio"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String, nullable=False, default="")
+    title = Column(String, nullable=False, default="")
+    location = Column(String, nullable=True)
+    bio = Column(Text, nullable=False, default="")
+    email = Column(String, nullable=True)
+    github_url = Column(String, nullable=True)
+    linkedin_url = Column(String, nullable=True)
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+
+
+class PortfolioProject(Base):
+    __tablename__ = "portfolio_projects"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String, nullable=False)
+    description = Column(Text, nullable=False)
+    tags = Column(JSON, nullable=False, default=list)
+    link = Column(String, nullable=True)
+    sort_order = Column(Integer, nullable=False, default=0)
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+
+
+class PortfolioExperience(Base):
+    __tablename__ = "portfolio_experience"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    role = Column(String, nullable=False)
+    company = Column(String, nullable=False)
+    period = Column(String, nullable=False)
+    bullets = Column(JSON, nullable=False, default=list)
+    sort_order = Column(Integer, nullable=False, default=0)
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
 

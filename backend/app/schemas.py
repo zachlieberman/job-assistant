@@ -7,6 +7,87 @@ CoverLetterTone = Literal["professional", "conversational", "enthusiastic"]
 MAX_TEXT_LENGTH = 50_000
 
 
+# Portfolio bio
+class PortfolioBioUpdate(BaseModel):
+    name: Optional[str] = None
+    title: Optional[str] = None
+    location: Optional[str] = None
+    bio: Optional[str] = None
+    email: Optional[str] = None
+    github_url: Optional[str] = None
+    linkedin_url: Optional[str] = None
+
+
+class PortfolioBioResponse(BaseModel):
+    id: int
+    name: str
+    title: str
+    location: Optional[str]
+    bio: str
+    email: Optional[str]
+    github_url: Optional[str]
+    linkedin_url: Optional[str]
+    updated_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+# Portfolio projects
+class PortfolioProjectCreate(BaseModel):
+    name: str
+    description: str
+    tags: List[str] = []
+    link: Optional[str] = None
+    sort_order: int = 0
+
+
+class PortfolioProjectUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    tags: Optional[List[str]] = None
+    link: Optional[str] = None
+    sort_order: Optional[int] = None
+
+
+class PortfolioProjectResponse(BaseModel):
+    id: int
+    name: str
+    description: str
+    tags: List[str]
+    link: Optional[str]
+    sort_order: int
+
+    model_config = {"from_attributes": True}
+
+
+# Portfolio experience
+class PortfolioExperienceCreate(BaseModel):
+    role: str
+    company: str
+    period: str
+    bullets: List[str] = []
+    sort_order: int = 0
+
+
+class PortfolioExperienceUpdate(BaseModel):
+    role: Optional[str] = None
+    company: Optional[str] = None
+    period: Optional[str] = None
+    bullets: Optional[List[str]] = None
+    sort_order: Optional[int] = None
+
+
+class PortfolioExperienceResponse(BaseModel):
+    id: int
+    role: str
+    company: str
+    period: str
+    bullets: List[str]
+    sort_order: int
+
+    model_config = {"from_attributes": True}
+
+
 # Profile
 class ProfileUpdate(BaseModel):
     linkedin_url: Optional[str] = None
