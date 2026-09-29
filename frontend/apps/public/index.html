@@ -4,10 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <!--
-      Site-level fallback for crawlers that do not run JavaScript (link-preview bots).
-      data-rh marks these as managed by react-helmet-async, which replaces them with
-      the per-route tags from src/components/Seo.tsx as soon as the app renders.
-      Route-specific tags (canonical, og:url) are deliberately not set here.
+      Site-level fallback for the dev server, where nothing is prerendered.
+      scripts/prerender.mjs strips these data-rh tags from every production page and
+      injects the per-route tags from src/components/Seo.tsx instead.
     -->
     <meta data-rh="true" name="description" content="Zachary Lieberman is a software engineer in Los Angeles, CA. He builds backend services, data layers, APIs and product features in Python, Go and TypeScript." />
     <meta data-rh="true" property="og:type" content="website" />
