@@ -18,8 +18,8 @@ export default function ProjectCard({ project, featured = false }: Props) {
 
   return (
     <article
-      className={`flex flex-col justify-between gap-8 rounded-[2rem] bg-card p-6 sm:p-8 ${
-        featured ? 'min-h-72 md:col-span-2 md:min-h-96 md:p-12' : 'min-h-64'
+      className={`mb-4 sm:mb-6 flex break-inside-avoid flex-col justify-between gap-8 rounded-[2rem] bg-card p-6 sm:p-8 ${
+        featured ? 'min-h-72 md:min-h-96 md:p-12 md:[column-span:all]' : 'min-h-64'
       }`}
     >
       <div>

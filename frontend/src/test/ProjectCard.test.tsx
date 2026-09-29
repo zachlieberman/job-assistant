@@ -66,6 +66,6 @@ describe('ProjectCard', () => {
 
   it('gives the featured card a wider treatment', () => {
     renderCard(project, true)
-    expect(screen.getByRole('article')).toHaveClass('md:col-span-2')
+    expect(screen.getByRole('article')).toHaveClass('md:[column-span:all]')
   })
 })
