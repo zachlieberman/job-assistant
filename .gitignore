@@ -33,3 +33,6 @@ dist-tracker/
 
 # Claude Code project settings (contains local-only config)
 .claude/
+
+# Test coverage output
+coverage/

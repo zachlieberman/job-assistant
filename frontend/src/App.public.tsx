@@ -1,21 +1,53 @@
-import { Routes, Route } from 'react-router-dom'
+import { useEffect, useRef } from 'react'
+import { Routes, Route, useLocation } from 'react-router-dom'
 import PublicNavbar from './components/PublicNavbar'
 import Home from './pages/Home'
 import Projects from './pages/Projects'
 import Experience from './pages/Experience'
 import Contact from './pages/Contact'
+import PageErrorBoundary from './components/public/PageErrorBoundary'
+
+const SITE = 'Zachary Lieberman'
+const TITLES: Record<string, string> = {
+  '/': SITE,
+  '/projects': `Projects | ${SITE}`,
+  '/experience': `Experience | ${SITE}`,
+  '/contact': `Contact | ${SITE}`,
+}
 
 export default function App() {
+  const { pathname } = useLocation()
+  const mainRef = useRef<HTMLElement>(null)
+  const previousPath = useRef(pathname)
+
+  // Announce client-side navigation: update the title and move focus to <main>.
+  useEffect(() => {
+    document.title = TITLES[pathname] ?? SITE
+    if (previousPath.current === pathname) return
+    previousPath.current = pathname
+    mainRef.current?.focus({ preventScroll: true })
+    window.scrollTo({ top: 0 })
+  }, [pathname])
+
   return (
-    <div className="min-h-screen bg-gray-950 text-gray-100">
+    <div className="min-h-screen overflow-x-clip bg-paper text-body">
       <PublicNavbar />
-      <main className="max-w-6xl mx-auto px-6 py-10">
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/projects" element={<Projects />} />
-          <Route path="/experience" element={<Experience />} />
-          <Route path="/contact" element={<Contact />} />
-        </Routes>
+      <main
+        id="main"
+        ref={mainRef}
+        tabIndex={-1}
+        className="mx-auto max-w-page px-5 pb-32 pt-8 sm:px-8 sm:pt-16"
+      >
+        <div key={pathname} className="route-in">
+          <PageErrorBoundary>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/projects" element={<Projects />} />
+              <Route path="/experience" element={<Experience />} />
+              <Route path="/contact" element={<Contact />} />
+            </Routes>
+          </PageErrorBoundary>
+        </div>
       </main>
     </div>
   )
