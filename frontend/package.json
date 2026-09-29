@@ -11,7 +11,7 @@
     "build:public": "vite build --mode public",
     "build:tracker": "vite build --mode tracker",
     "preview:public": "vite preview --mode public",
-    "preview:tracker": "vite preview --mode tracker --outDir dist-tracker",
+    "preview:tracker": "vite preview --mode tracker",
     "test": "vitest",
     "test:coverage": "vitest --coverage",
     "lint": "eslint src",
