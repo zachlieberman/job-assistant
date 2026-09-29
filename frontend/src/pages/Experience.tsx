@@ -1,42 +1,26 @@
-import { useEffect, useState } from 'react'
-import { PortfolioExperience, listPortfolioExperience } from '../api/client'
+import { listPortfolioExperience } from '../api/client'
+import AsyncView from '../components/public/AsyncView'
+import { TimelineSkeleton } from '../components/public/PageSkeletons'
+import Timeline from '../components/public/Timeline'
+import { useApiResource } from '../hooks/useApiResource'
 
 export default function Experience() {
-  const [jobs, setJobs] = useState<PortfolioExperience[] | null>(null)
-  const [error, setError] = useState(false)
-
-  useEffect(() => {
-    listPortfolioExperience()
-      .then((res) => setJobs(res.data))
-      .catch(() => setError(true))
-  }, [])
+  const { state, retry } = useApiResource(listPortfolioExperience, 'experience')
 
   return (
-    <div className="max-w-3xl">
-      <h1 className="text-3xl font-bold text-white mb-8">Experience</h1>
-      {error ? (
-        <p className="text-red-400">Failed to load. Please refresh the page.</p>
-      ) : !jobs ? (
-        <p className="text-gray-500">Loading...</p>
-      ) : (
-        <div className="space-y-8">
-          {jobs.map((job) => (
-            <div key={job.id} className="border-l-2 border-gray-800 pl-5">
-              <div className="flex flex-wrap items-baseline gap-x-2">
-                <h3 className="text-lg font-semibold text-white">{job.role}</h3>
-                <span className="text-gray-500">·</span>
-                <span className="text-gray-400">{job.company}</span>
-              </div>
-              <p className="text-sm text-gray-500 mb-3">{job.period}</p>
-              <ul className="list-disc list-inside text-sm text-gray-400 space-y-1">
-                {job.bullets.map((bullet, j) => (
-                  <li key={j}>{bullet}</li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-      )}
+    <div>
+      <h1 className="display display-xl">Experience</h1>
+      <p className="mt-6 max-w-prose">Where I've worked, most recent first.</p>
+      <div className="mt-16 max-w-3xl">
+        <AsyncView
+          resource={state}
+          onRetry={retry}
+          what="the experience"
+          fallback={<TimelineSkeleton />}
+        >
+          {(jobs) => <Timeline jobs={jobs} />}
+        </AsyncView>
+      </div>
     </div>
   )
 }

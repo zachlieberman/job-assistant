@@ -1,52 +1,75 @@
-import { useEffect, useState } from 'react'
-import { PortfolioBio, getPortfolioBio } from '../api/client'
+import { getPortfolioBio } from '../api/client'
+import type { PortfolioBio } from '../api/client'
+import AsyncView from '../components/public/AsyncView'
+import { ArrowUpRight } from '../components/public/icons'
+import { ContactSkeleton } from '../components/public/PageSkeletons'
+import { useApiResource } from '../hooks/useApiResource'
+import { safeHref, stripProtocol } from '../lib/publicUtils'
+
+interface ContactLink {
+  label: string
+  href: string
+  value: string
+}
+
+export function contactLinks(bio: PortfolioBio): ContactLink[] {
+  const email = bio.email ? { label: 'Email', href: `mailto:${bio.email}`, value: bio.email } : null
+  const social = (label: string, url: string | null) => {
+    const href = safeHref(url)
+    return href ? { label, href, value: stripProtocol(href) } : null
+  }
+  return [email, social('GitHub', bio.github_url), social('LinkedIn', bio.linkedin_url)].filter(
+    (link): link is ContactLink => link !== null,
+  )
+}
+
+function ContactList({ links }: { links: ContactLink[] }) {
+  if (!links.length) return <p>No contact details are listed yet.</p>
+  return (
+    <ul className="space-y-4">
+      {links.map((link) => {
+        const external = link.href.startsWith('http')
+        return (
+          <li key={link.label}>
+            <a
+              href={link.href}
+              {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+              className="group flex min-h-20 items-center justify-between gap-4 rounded-3xl bg-card px-6 py-4 text-ink transition-colors duration-200 hover:bg-ink hover:text-paper sm:px-8"
+            >
+              <span>
+                <span className="block text-base opacity-75">{link.label}</span>
+                <span className="block break-all text-xl font-bold sm:text-2xl">{link.value}</span>
+                {external && <span className="sr-only">(opens in a new tab)</span>}
+              </span>
+              <ArrowUpRight
+                width={28}
+                height={28}
+                className="shrink-0 transition-transform duration-200 group-hover:-translate-y-1 group-hover:translate-x-1"
+              />
+            </a>
+          </li>
+        )
+      })}
+    </ul>
+  )
+}
 
 export default function Contact() {
-  const [bio, setBio] = useState<PortfolioBio | null>(null)
-  const [error, setError] = useState(false)
-
-  useEffect(() => {
-    getPortfolioBio()
-      .then((res) => setBio(res.data))
-      .catch(() => setError(true))
-  }, [])
-
-  if (error) return <p className="text-red-400">Failed to load. Please refresh the page.</p>
-  if (!bio) return <p className="text-gray-500">Loading...</p>
-
-  const links = [
-    bio.email && { label: 'Email', href: `mailto:${bio.email}`, value: bio.email },
-    bio.github_url && {
-      label: 'GitHub',
-      href: bio.github_url,
-      value: bio.github_url.replace(/^https?:\/\//, ''),
-    },
-    bio.linkedin_url && {
-      label: 'LinkedIn',
-      href: bio.linkedin_url,
-      value: bio.linkedin_url.replace(/^https?:\/\//, ''),
-    },
-  ].filter((link): link is { label: string; href: string; value: string } => Boolean(link))
+  const { state, retry } = useApiResource(getPortfolioBio, 'bio')
 
   return (
-    <div className="max-w-lg">
-      <h1 className="text-3xl font-bold text-white mb-4">Get in Touch</h1>
-      <p className="text-gray-400 leading-relaxed mb-8">
-        Feel free to reach out — happy to talk about opportunities, projects, or anything else.
+    <div>
+      <h1 className="display display-xl">
+        Let's talk <span className="text-mist">about what you're building.</span>
+      </h1>
+      <p className="mt-8 max-w-prose">
+        Happy to talk about opportunities, projects, or anything else. Email is the fastest way to
+        reach me.
       </p>
-      <div className="space-y-3">
-        {links.map((link) => (
-          <a
-            key={link.label}
-            href={link.href}
-            target={link.href.startsWith('http') ? '_blank' : undefined}
-            rel={link.href.startsWith('http') ? 'noreferrer' : undefined}
-            className="flex items-center justify-between rounded-lg border border-gray-800 bg-gray-900/50 px-4 py-3 hover:border-gray-700 transition-colors"
-          >
-            <span className="text-sm font-medium text-gray-300">{link.label}</span>
-            <span className="text-sm text-indigo-400">{link.value}</span>
-          </a>
-        ))}
+      <div className="mt-12 max-w-2xl">
+        <AsyncView resource={state} onRetry={retry} what="the contact details" fallback={<ContactSkeleton />}>
+          {(bio) => <ContactList links={contactLinks(bio)} />}
+        </AsyncView>
       </div>
     </div>
   )
