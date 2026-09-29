@@ -1,15 +1,27 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { PortfolioBio, getPortfolioBio } from '../api/client'
 
 export default function Home() {
+  const [bio, setBio] = useState<PortfolioBio | null>(null)
+  const [error, setError] = useState(false)
+
+  useEffect(() => {
+    getPortfolioBio()
+      .then((res) => setBio(res.data))
+      .catch(() => setError(true))
+  }, [])
+
+  if (error) return <p className="text-red-400">Failed to load. Please refresh the page.</p>
+  if (!bio) return <p className="text-gray-500">Loading...</p>
+
   return (
     <div className="max-w-3xl">
       <p className="text-indigo-400 font-medium mb-3">Hi, I'm</p>
-      <h1 className="text-4xl sm:text-5xl font-bold text-white tracking-tight mb-4">Your Name</h1>
-      <h2 className="text-xl sm:text-2xl text-gray-400 mb-6">Software Engineer</h2>
-      <p className="text-gray-400 leading-relaxed mb-8">
-        A short bio goes here — what you build, what you're into, and what you're looking for next.
-        Replace this paragraph with a couple sentences about yourself.
-      </p>
+      <h1 className="text-4xl sm:text-5xl font-bold text-white tracking-tight mb-4">{bio.name}</h1>
+      <h2 className="text-xl sm:text-2xl text-gray-400 mb-1">{bio.title}</h2>
+      {bio.location && <p className="text-gray-500 text-sm mb-6">{bio.location}</p>}
+      <p className="text-gray-400 leading-relaxed mb-8 whitespace-pre-line">{bio.bio}</p>
       <div className="flex gap-3">
         <Link
           to="/projects"

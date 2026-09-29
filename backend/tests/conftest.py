@@ -14,7 +14,10 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 # Point the env at a throwaway SQLite DB before any app module is imported
 os.environ.setdefault("DATABASE_URL", "sqlite+aiosqlite:///:memory:")
 os.environ.setdefault("ANTHROPIC_API_KEY", "test-key")
+os.environ.setdefault("ADMIN_USERNAME", "test-admin")
+os.environ.setdefault("ADMIN_PASSWORD", "test-password")
 
+from app.auth import require_auth  # noqa: E402
 from app.database import Base, get_db  # noqa: E402
 from app.main import app  # noqa: E402
 
@@ -44,6 +47,27 @@ async def db_session(db_engine):
 @pytest_asyncio.fixture(scope="function")
 async def client(db_engine):
     """HTTP test client wired to an isolated in-memory database."""
+    session_factory = async_sessionmaker(db_engine, expire_on_commit=False)
+
+    async def override_get_db():
+        async with session_factory() as session:
+            yield session
+
+    app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[require_auth] = lambda: None
+
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as ac:
+        yield ac
+
+    app.dependency_overrides.clear()
+
+
+@pytest_asyncio.fixture(scope="function")
+async def unauthenticated_client(db_engine):
+    """HTTP test client wired to an isolated database WITHOUT the require_auth
+    override — for tests that exercise real login/token/401 behavior."""
     session_factory = async_sessionmaker(db_engine, expire_on_commit=False)
 
     async def override_get_db():
