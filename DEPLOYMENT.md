@@ -23,6 +23,7 @@ each provider's dashboard.
    - `DATABASE_URL` → set it to `${{Postgres.DATABASE_URL}}` (Railway's variable reference to the Postgres service — pick it from the variable reference dropdown rather than typing it, so it stays in sync)
    - `ANTHROPIC_API_KEY` → your key from https://console.anthropic.com/
    - `CORS_ORIGINS` → leave a placeholder for now (e.g. `http://localhost:5173`) — you'll update this in step 4 once you have both Vercel URLs
+   - `VERCEL_DEPLOY_HOOK_URL` (optional) → a Deploy Hook URL from the **public** Vercel project (**Settings → Git → Deploy Hooks**, branch `main`). The public site is prerendered from this API at build time, so with the hook set, saving bio, projects or experience in the admin panel rebuilds the site after edits pause (`REBUILD_DEBOUNCE_SECONDS`, default 60, so a burst of edits is one build). Treat the URL as a secret; without it the site only updates on the next manual deploy. A rebuild pending when the backend restarts is lost, so redeploy manually if an edit does not appear.
 6. Deploy. Once it's up, Railway gives the service a public URL under **Settings → Networking → Generate Domain** (something like `job-assistant-backend-production.up.railway.app`). Confirm it works by visiting `<that-url>/health` — should return `{"status":"ok"}`.
 
 ## 2. Vercel — public portfolio
