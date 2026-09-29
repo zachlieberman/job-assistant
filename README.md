@@ -2,7 +2,29 @@
 
 A web app to track job applications, tailor resumes, generate cover letters, and prep for interviews — powered by Claude AI.
 
-![Dashboard](docs/dashboard.png)
+The codebase ships as two separate apps that share one backend:
+
+### Public portfolio
+
+A login-free portfolio site (Home, Projects, Experience, Contact) whose content is editable from the tracker's Admin page.
+
+![Portfolio home page](docs/portfolio-home.png)
+
+| Projects | Experience |
+|----------|------------|
+| ![Portfolio projects page](docs/portfolio-projects.png) | ![Portfolio experience page](docs/portfolio-experience.png) |
+
+### Private job tracker
+
+A login-gated dashboard for managing your job search. Run it with `npm run dev:tracker` (see [Setup](#4-frontend)).
+
+![Job tracker dashboard](docs/tracker-dashboard.png)
+
+| Login | Journey (Sankey) |
+|-------|------------------|
+| ![Tracker login](docs/tracker-login.png) | ![Application journey Sankey diagram](docs/tracker-journey.png) |
+
+> Screenshots use dummy data (a fictional "Alex Rivera" profile and sample applications).
 
 ## Prerequisites
 
@@ -44,10 +66,11 @@ API runs at `http://localhost:8000`. Tables are created automatically on first s
 ```bash
 cd frontend
 npm install
-npm run dev
+npm run dev:public    # portfolio site
+npm run dev:tracker   # job tracker (pass --port if the portfolio is running)
 ```
 
-App runs at `http://localhost:5173`.
+Apps run at `http://localhost:5173`.
 
 ---
 
@@ -131,6 +154,11 @@ gh pr create
   - Sort by any column (Company, Role, Status, Applied date), defaulting to most recent first
   - Import applications from a CSV file (tab or comma delimited, Excel-compatible)
   - Export the current filtered/sorted view to a CSV file
+  - Dashboard with weekly activity, pipeline breakdown, and recent applications (see the [dashboard screenshot](#private-job-tracker))
+  - Journey view: a Sankey diagram of how applications flow between stages
+  - Per-application detail page with status, job description, tailored resume, cover letter, and notes
+
+  ![Application detail page](docs/tracker-application.png)
 - **Resume Tailoring** — pick a resume, tailor it to a job description with keyword analysis
 - **Cover Letter Generation** — generate cover letters in professional, conversational, or enthusiastic tone
 - **Interview Prep** — generate behavioral, technical, and culture-fit questions tailored to your resume
