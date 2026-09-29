@@ -10,20 +10,28 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react()],
-    // The tracker compiles with its own Tailwind config (tailwind.tracker.config.js).
-    // The public build keeps using postcss.config.js + tailwind.config.js untouched.
-    css: isTracker
-      ? {
-          postcss: {
-            plugins: [
-              tailwindcss(path.resolve(__dirname, 'tailwind.tracker.config.js')),
-              autoprefixer(),
-            ],
-          },
-        }
-      : undefined,
     root: path.resolve(__dirname, 'apps', appDir),
     envDir: __dirname,
+    // Each app's index.html lives under apps/, so map root-relative /src/ URLs
+    // (used by the dev server) back to the shared src directory.
+    resolve: {
+      alias: [{ find: /^\/src\//, replacement: `${path.resolve(__dirname, 'src')}/` }],
+    },
+    // Each app gets its own Tailwind config (and CSS entry) so the two designs
+    // never share generated styles. Inline config replaces postcss.config.js.
+    css: {
+      postcss: {
+        plugins: [
+          tailwindcss(
+            path.resolve(
+              __dirname,
+              isTracker ? 'tailwind.tracker.config.js' : 'tailwind.public.config.js',
+            ),
+          ),
+          autoprefixer(),
+        ],
+      },
+    },
     build: {
       // The public build keeps the default "dist" name so the existing,
       // already-configured Vercel project needs no dashboard changes.
@@ -38,7 +46,13 @@ export default defineConfig(({ mode }) => {
       coverage: {
         provider: 'v8',
         reporter: ['text', 'html'],
-        exclude: ['src/main.public.tsx', 'src/main.tracker.tsx', 'src/index.css', 'src/tracker.css'],
+        exclude: [
+          'src/main.public.tsx',
+          'src/main.tracker.tsx',
+          'src/index.css',
+          'src/public.css',
+          'src/tracker.css',
+        ],
       },
     },
   }

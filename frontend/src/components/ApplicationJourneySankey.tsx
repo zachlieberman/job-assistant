@@ -1,42 +1,81 @@
 import { useEffect, useRef } from 'react'
-import { useContainerWidth } from '../hooks/useContainerWidth'
 import { select } from 'd3-selection'
 import { sankey, sankeyLinkHorizontal, SankeyNode as D3SankeyNode, SankeyLink as D3SankeyLink } from 'd3-sankey'
-import { SankeyData } from '../api/client'
-import { STATUS_META, statusLabel } from '../lib/statusMeta'
+import type { SankeyData } from '../api/client'
 
-/** Same blue ramp as the status badges; "active" (still in flight) is a neutral slate. */
-const STATUS_COLORS: Record<string, string> = {
-  active: '#4A5163',
-  applied: STATUS_META.applied.mark,
-  phone_screen: STATUS_META.phone_screen.mark,
-  technical: STATUS_META.technical.mark,
-  offer: STATUS_META.offer.mark,
-  rejected: STATUS_META.rejected.mark,
+export const STATUS_COLORS: Record<string, string> = {
+  active: '#475569',
+  applied: '#60a5fa',
+  phone_screen: '#a78bfa',
+  technical: '#f59e0b',
+  offer: '#34d399',
+  rejected: '#f87171',
 }
 
-export function journeyLabel(name: string): string {
-  return name === 'active' ? 'Active' : statusLabel(name)
+export const STATUS_LABELS: Record<string, string> = {
+  active: 'Active',
+  applied: 'Applied',
+  phone_screen: 'Phone Screen',
+  technical: 'Technical',
+  offer: 'Offer',
+  rejected: 'Rejected',
 }
 
-const LABEL_COLOR = '#E6E8EE'
+/** Pointer or focus position (viewport px) plus the text to show in a tooltip. */
+export interface SankeyHover {
+  text: string
+  x: number
+  y: number
+}
 
 interface Props {
   data: SankeyData
   width?: number
   height?: number
+  /** Overrides for the built-in status colors. */
+  colors?: Record<string, string>
+  labelColor?: string
+  labels?: Record<string, string>
+  fontSize?: number
+  linkOpacity?: number
+  /** Right-hand space reserved for node labels. */
+  labelSpace?: number
+  /** When set, nodes become keyboard focusable and report hover/focus. */
+  onHover?: (hover: SankeyHover | null) => void
 }
 
-export default function ApplicationJourneySankey({ data, width: defaultWidth = 700, height = 340 }: Props) {
+function hoverAt(event: Event, text: string): SankeyHover {
+  if (event instanceof MouseEvent) return { text, x: event.clientX, y: event.clientY }
+  const box = (event.currentTarget as Element).getBoundingClientRect()
+  return { text, x: box.left + box.width / 2, y: box.top }
+}
+
+export default function ApplicationJourneySankey({
+  data,
+  width = 700,
+  height = 340,
+  colors,
+  labelColor = '#e2e8f0',
+  labels,
+  fontSize = 12,
+  linkOpacity = 0.45,
+  labelSpace = 140,
+  onHover,
+}: Props) {
   const svgRef = useRef<SVGSVGElement>(null)
-  const { ref: containerRef, width } = useContainerWidth<HTMLDivElement>(defaultWidth)
+  const onHoverRef = useRef(onHover)
+  onHoverRef.current = onHover
+  const palette = colors ? { ...STATUS_COLORS, ...colors } : STATUS_COLORS
+  const paletteKey = JSON.stringify(palette)
+  const names = labels ? { ...STATUS_LABELS, ...labels } : STATUS_LABELS
+  const namesKey = JSON.stringify(names)
 
   useEffect(() => {
     if (!svgRef.current || !data.nodes.length) return
     const svg = select(svgRef.current)
     svg.selectAll('*').remove()
 
-    const margin = { top: 16, right: width < 520 ? 118 : 150, bottom: 16, left: 10 }
+    const margin = { top: 16, right: labelSpace, bottom: 16, left: 10 }
     const innerW = width - margin.left - margin.right
     const innerH = height - margin.top - margin.bottom
 
@@ -85,55 +124,69 @@ export default function ApplicationJourneySankey({ data, width: defaultWidth = 7
       .join('path')
       .attr('d', sankeyLinkHorizontal())
       .attr('fill', 'none')
-      .attr('stroke', (d) => STATUS_COLORS[(d.source as N).name] ?? '#6E7688')
+      .attr('stroke', (d) => palette[(d.source as N).name] ?? '#cbd5e1')
       .attr('stroke-width', (d) => Math.max(1, d.width ?? 1))
-      .attr('opacity', 0.5)
+      .attr('opacity', linkOpacity)
+      .on('pointerenter', (event, d) => {
+        const from = names[(d.source as N).name] ?? (d.source as N).name
+        const to = names[(d.target as N).name] ?? (d.target as N).name
+        onHoverRef.current?.(hoverAt(event, `${from} to ${to}: ${d.value}`))
+      })
+      .on('pointerleave', () => onHoverRef.current?.(null))
 
     const node = g.append('g')
       .selectAll('g')
       .data(graph.nodes as N[])
       .join('g')
 
+    if (onHoverRef.current) {
+      const describe = (d: N) => `${names[d.name] ?? d.name}: ${d.value ?? 0}`
+      node
+        .attr('class', 'sankey-node')
+        .attr('tabindex', 0)
+        .attr('role', 'img')
+        .attr('aria-label', (d) => describe(d))
+        .on('pointerenter focus', (event, d) => onHoverRef.current?.(hoverAt(event, describe(d))))
+        .on('pointerleave blur', () => onHoverRef.current?.(null))
+    }
+
     node.append('rect')
       .attr('x', (d) => d.x0 ?? 0)
       .attr('y', (d) => d.y0 ?? 0)
       .attr('width', (d) => (d.x1 ?? 0) - (d.x0 ?? 0))
       .attr('height', (d) => Math.max(1, (d.y1 ?? 0) - (d.y0 ?? 0)))
-      .attr('fill', (d) => STATUS_COLORS[d.name] ?? '#6E7688')
+      .attr('fill', (d) => palette[d.name] ?? '#94a3b8')
       .attr('rx', 3)
 
     node.append('text')
       .attr('x', (d) => (d.x1 ?? 0) + 6)
       .attr('y', (d) => ((d.y0 ?? 0) + (d.y1 ?? 0)) / 2)
       .attr('dy', '0.35em')
-      .attr('font-size', 13)
-      .attr('fill', LABEL_COLOR)
+      .attr('font-size', fontSize)
+      .attr('fill', labelColor)
       .text((d) => {
-        const label = journeyLabel(d.name)
+        const label = names[d.name] ?? d.name
         const val = (d.value ?? 0)
         return `${label} (${val})`
       })
-  }, [data, width, height])
+  }, [data, width, height, paletteKey, namesKey, labelColor, labelSpace, fontSize, linkOpacity])
 
   if (!data.nodes.length) {
     return (
-      <div className="flex h-32 items-center justify-center text-center text-sm text-muted">
-        No journey data yet. Change an application’s status and its path will appear here.
+      <div className="flex items-center justify-center h-32 text-slate-500 text-sm">
+        No journey data yet — status changes will appear here.
       </div>
     )
   }
 
   return (
-    <div ref={containerRef} className="w-full">
-      <svg
-        ref={svgRef}
-        role="img"
-        aria-label="Sankey diagram of how applications move between stages. The same data is listed in the table below."
-        width={width}
-        height={height}
-        className="w-full"
-        viewBox={`0 0 ${width} ${height}`}
-      />
-    </div>
+    <svg
+      ref={svgRef}
+      width={width}
+      height={height}
+      className="w-full"
+      viewBox={`0 0 ${width} ${height}`}
+      preserveAspectRatio="xMidYMid meet"
+    />
   )
 }

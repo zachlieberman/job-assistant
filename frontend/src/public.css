@@ -1,0 +1,127 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    background: #fafaf8;
+    color-scheme: light;
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-paper font-sans text-lg leading-relaxed text-body antialiased;
+    margin: 0;
+  }
+  :focus-visible {
+    outline: 3px solid #1f5c45;
+    outline-offset: 3px;
+    border-radius: 0.5rem;
+  }
+  main:focus {
+    outline: none;
+  }
+}
+
+@layer components {
+  .display {
+    @apply font-bold text-ink;
+    letter-spacing: -0.04em;
+    line-height: 0.95;
+  }
+  .display-xl {
+    font-size: clamp(3rem, 0.5rem + 10vw, 8.5rem);
+  }
+  .display-lg {
+    font-size: clamp(2.5rem, 1rem + 6vw, 5.5rem);
+  }
+  .display-md {
+    font-size: clamp(1.875rem, 1.2rem + 2.4vw, 3rem);
+  }
+  .skip-link {
+    @apply absolute left-4 top-4 z-[60] -translate-y-24 rounded-full bg-ink px-5 py-3 font-bold text-paper;
+  }
+  .skip-link:focus {
+    @apply translate-y-0;
+  }
+  .skeleton {
+    @apply rounded-2xl bg-card;
+    animation: pulse 1.6s ease-in-out infinite;
+  }
+  .expand {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 320ms ease;
+  }
+  .expand[data-open='true'] {
+    grid-template-rows: 1fr;
+  }
+  .expand > div {
+    min-height: 0;
+    overflow: hidden;
+    visibility: hidden;
+    transition: visibility 0s linear 320ms;
+  }
+  .expand[data-open='true'] > div {
+    visibility: visible;
+    transition-delay: 0s;
+  }
+  .sankey-node {
+    outline: none;
+  }
+  .sankey-node:focus-visible rect {
+    stroke: #1f5c45;
+    stroke-width: 3px;
+  }
+}
+
+/* Entrance animations (hero and menu stagger, route change, skeleton pulse). */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes route-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes pulse {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+.rise {
+  animation: rise 760ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation-delay: calc(var(--i, 0) * 90ms + 60ms);
+}
+.route-in {
+  animation: route-in 320ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .rise,
+  .route-in,
+  .skeleton {
+    animation: none;
+  }
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    transition-delay: 0s !important;
+  }
+}

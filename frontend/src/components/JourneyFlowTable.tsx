@@ -1,5 +1,5 @@
 import type { SankeyData } from '../api/client'
-import { journeyLabel } from './ApplicationJourneySankey'
+import { journeyLabel } from '../lib/statusMeta'
 
 /** Text alternative to the Sankey: every flow as a row. */
 export default function JourneyFlowTable({ data }: { data: SankeyData }) {

@@ -53,3 +53,8 @@ export function isStatus(value: string): value is Status {
 export function statusLabel(value: string): string {
   return isStatus(value) ? STATUS_META[value].label : value
 }
+
+/** Label for a Sankey node: pipeline statuses plus the in-flight "active" bucket. */
+export function journeyLabel(name: string): string {
+  return name === 'active' ? 'Active' : statusLabel(name)
+}

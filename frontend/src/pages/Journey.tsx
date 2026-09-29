@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { getApplicationJourney, SankeyData } from '../api/client'
-import ApplicationJourneySankey from '../components/ApplicationJourneySankey'
+import TrackerJourneySankey from '../components/TrackerJourneySankey'
 import JourneyFlowTable from '../components/JourneyFlowTable'
 import ErrorPanel from '../components/ui/ErrorPanel'
 import PageHeader from '../components/ui/PageHeader'
@@ -35,7 +35,7 @@ export default function Journey() {
             </LoadingRegion>
           ) : (
             <>
-              <ApplicationJourneySankey data={journeyData} height={420} />
+              <TrackerJourneySankey data={journeyData} height={420} />
               <JourneyFlowTable data={journeyData} />
             </>
           )}
