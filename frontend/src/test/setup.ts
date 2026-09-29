@@ -6,4 +6,5 @@ import { clearApiCache } from '../hooks/useApiResource'
 beforeEach(() => clearApiCache())
 
 // jsdom does not implement scrolling.
-window.scrollTo = () => {}
+// (Server-render tests opt into the node environment, where there is no window.)
+if (typeof window !== 'undefined') window.scrollTo = () => {}

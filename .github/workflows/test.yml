@@ -78,6 +78,13 @@ jobs:
       - name: Install dependencies
         run: cd frontend && npm install
       - name: Build public portfolio bundle
-        run: cd frontend && npm run build:public
+        # Prerenders from a fixture instead of the live API, so CI is hermetic.
+        run: cd frontend && PRERENDER_DATA_FILE=scripts/fixtures/prerender-data.json npm run build:public
+      - name: Check prerendered pages
+        run: |
+          cd frontend/dist
+          for page in index projects/index experience/index contact/index 404; do
+            grep -q '<h1' "$page.html" || { echo "$page.html has no prerendered content"; exit 1; }
+          done
       - name: Build tracker bundle
         run: cd frontend && npm run build:tracker

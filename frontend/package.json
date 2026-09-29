@@ -8,7 +8,7 @@
     "build": "npm run build:public",
     "dev:public": "vite --mode public",
     "dev:tracker": "vite --mode tracker",
-    "build:public": "vite build --mode public",
+    "build:public": "vite build --mode public && vite build --mode public --ssr ../../src/entry-server.tsx && node scripts/prerender.mjs",
     "build:tracker": "vite build --mode tracker",
     "preview:public": "vite preview --mode public",
     "preview:tracker": "vite preview --mode tracker",
