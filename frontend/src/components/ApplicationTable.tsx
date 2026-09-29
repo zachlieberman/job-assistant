@@ -87,7 +87,7 @@ export default function ApplicationTable({ applications, sortKey, sortDir, onSor
             <tr
               key={app.id}
               className="hover:bg-gray-800/40 transition-colors cursor-pointer group"
-              onClick={() => navigate(`/applications/${app.id}`)}
+              onClick={() => navigate(`/tracker/applications/${app.id}`)}
             >
               <td className="px-5 py-4 font-semibold text-white">{app.company}</td>
               <td className="px-5 py-4 text-gray-300">{app.role}</td>
@@ -112,7 +112,7 @@ export default function ApplicationTable({ applications, sortKey, sortDir, onSor
                 <button
                   onClick={(e) => {
                     e.stopPropagation()
-                    navigate(`/interview/${app.id}`)
+                    navigate(`/tracker/interview/${app.id}`)
                   }}
                   className="text-indigo-400 hover:text-indigo-300 text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity"
                 >
