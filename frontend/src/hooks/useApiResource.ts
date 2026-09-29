@@ -9,6 +9,26 @@ export type Resource<T> =
 // cold backend is only felt on the first visit.
 const cache = new Map<string, unknown>()
 
+// A cold backend can leave a request hanging; surface the error state (with
+// Retry) instead of an endless skeleton. The request itself is not aborted.
+const REQUEST_TIMEOUT_MS = 15_000
+
+function withTimeout<T>(request: Promise<T>): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('Request timed out')), REQUEST_TIMEOUT_MS)
+    request.then(
+      (value) => {
+        clearTimeout(timer)
+        resolve(value)
+      },
+      (error: unknown) => {
+        clearTimeout(timer)
+        reject(error)
+      },
+    )
+  })
+}
+
 export const clearApiCache = () => cache.clear()
 
 function initialState<T>(cacheKey?: string): Resource<T> {
@@ -30,8 +50,7 @@ export function useApiResource<T>(fetcher: () => Promise<{ data: T }>, cacheKey?
     let cancelled = false
     // Show this key's cached data (if any) while a fresh copy loads.
     setState(initialState<T>(cacheKey))
-    fetcherRef
-      .current()
+    withTimeout(fetcherRef.current())
       .then((res) => {
         if (cancelled) return
         if (cacheKey) cache.set(cacheKey, res.data)

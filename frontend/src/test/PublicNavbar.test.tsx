@@ -1,7 +1,7 @@
-import { render, screen } from '@testing-library/react'
+import { act, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, it, expect } from 'vitest'
-import { MemoryRouter } from 'react-router-dom'
+import { MemoryRouter, useNavigate } from 'react-router-dom'
 import PublicNavbar from '../components/PublicNavbar'
 
 const renderNav = (path = '/') =>
@@ -87,5 +87,46 @@ describe('PublicNavbar', () => {
     ;(document.activeElement as HTMLElement).blur()
     await userEvent.tab()
     expect(screen.getByRole('dialog')).toContainElement(document.activeElement as HTMLElement)
+  })
+
+  it('closes when the route changes without a click inside the menu', async () => {
+    function GoButton() {
+      const navigate = useNavigate()
+      return <button onClick={() => navigate('/projects')}>go</button>
+    }
+    render(
+      <MemoryRouter>
+        <PublicNavbar />
+        <GoButton />
+      </MemoryRouter>,
+    )
+    await userEvent.click(screen.getByRole('button', { name: 'Open menu' }))
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+    // The dialog is modal, so trigger navigation the way back/forward would.
+    await act(async () => screen.getByText('go').click())
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(document.body.style.overflow).toBe('')
+  })
+
+  it('restores the previous body overflow instead of clearing it', async () => {
+    document.body.style.overflow = 'scroll'
+    renderNav()
+    await userEvent.click(screen.getByRole('button', { name: 'Open menu' }))
+    await userEvent.keyboard('{Escape}')
+    expect(document.body.style.overflow).toBe('scroll')
+    document.body.style.overflow = ''
+  })
+
+  it('wraps Tab from the last link to the first, and Shift+Tab back', async () => {
+    renderNav()
+    await userEvent.click(screen.getByRole('button', { name: 'Open menu' }))
+    const dialog = screen.getByRole('dialog')
+    const first = within(dialog).getByRole('link', { name: 'Zachary Lieberman' })
+    const last = within(dialog).getByRole('link', { name: 'Contact' })
+    last.focus()
+    await userEvent.tab()
+    expect(first).toHaveFocus()
+    await userEvent.tab({ shift: true })
+    expect(last).toHaveFocus()
   })
 })

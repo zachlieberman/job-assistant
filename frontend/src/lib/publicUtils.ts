@@ -9,8 +9,11 @@ export function safeHref(url: string | null | undefined): string | null {
   if (!url) return null
   try {
     const parsed = new URL(url)
-    return ['http:', 'https:', 'mailto:'].includes(parsed.protocol) ? parsed.href : null
+    if (['http:', 'https:', 'mailto:'].includes(parsed.protocol)) return parsed.href
+    console.warn('Dropping URL with unsupported protocol', url)
+    return null
   } catch {
+    console.warn('Dropping invalid URL', url)
     return null
   }
 }

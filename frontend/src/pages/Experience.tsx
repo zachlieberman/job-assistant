@@ -10,7 +10,7 @@ export default function Experience() {
   return (
     <div>
       <h1 className="display display-xl">Experience</h1>
-      <p className="mt-6 max-w-prose">Where I've worked, most recent first.</p>
+      <p className="mt-6 max-w-prose">Where I've worked.</p>
       <div className="mt-16 max-w-3xl">
         <AsyncView
           resource={state}

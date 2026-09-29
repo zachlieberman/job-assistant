@@ -1,6 +1,7 @@
-import { render, screen, fireEvent, within } from '@testing-library/react'
+import { act, render, screen, fireEvent, within } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
 import * as client from '../api/client'
+import JourneyChart from '../components/public/JourneyChart'
 import JourneyDemoCard from '../components/public/JourneyDemoCard'
 import ApplicationJourneySankey from '../components/ApplicationJourneySankey'
 import { SAMPLE_JOURNEY, journeyRows } from '../content/sampleJourney'
@@ -65,8 +66,55 @@ describe('ApplicationJourneySankey (shared with the tracker)', () => {
     expect(container.querySelector('[tabindex]')).toBeNull()
   })
 
+  it('drops back-edges so d3-sankey never sees a cycle, and remaps nodes', () => {
+    const data = {
+      nodes: [{ name: 'applied' }, { name: 'phone_screen' }, { name: 'rejected' }],
+      links: [
+        { source: 0, target: 1, value: 5 },
+        { source: 1, target: 0, value: 2 },
+        { source: 1, target: 2, value: 3 },
+      ],
+    }
+    const { container } = render(<ApplicationJourneySankey data={data} />)
+    expect(container.querySelectorAll('svg rect')).toHaveLength(3)
+    expect(container.querySelectorAll('svg path')).toHaveLength(2)
+    expect(container.textContent).toContain('Phone Screen (5)')
+  })
+
+  it('renders nothing (without throwing) when only back-edges exist', () => {
+    const data = {
+      nodes: [{ name: 'applied' }, { name: 'rejected' }],
+      links: [{ source: 1, target: 0, value: 4 }],
+    }
+    const { container } = render(<ApplicationJourneySankey data={data} />)
+    expect(container.querySelectorAll('svg rect')).toHaveLength(0)
+  })
+
   it('shows an empty message with no data', () => {
     render(<ApplicationJourneySankey data={{ nodes: [], links: [] }} />)
     expect(screen.getByText(/No journey data yet/)).toBeInTheDocument()
+  })
+})
+
+describe('JourneyChart tooltip', () => {
+  it('positions the tooltip from pointer coordinates and clamps it inside the chart', async () => {
+    const { container } = render(<JourneyChart />)
+    const wrap = container.firstElementChild as HTMLElement
+    wrap.getBoundingClientRect = () => ({ left: 100, top: 50, width: 400, height: 360 }) as DOMRect
+    const node = await screen.findByLabelText('Offer: 3')
+
+    act(() => void node.dispatchEvent(new MouseEvent('pointerenter', { clientX: 105, clientY: 200 })))
+    expect(screen.getByRole('tooltip')).toHaveStyle({ left: '60px', top: '150px' })
+
+    act(() => void node.dispatchEvent(new MouseEvent('pointerenter', { clientX: 900, clientY: 200 })))
+    expect(screen.getByRole('tooltip')).toHaveStyle({ left: '340px' })
+  })
+
+  it('names both stages and the count when hovering a flow', async () => {
+    const { container } = render(<JourneyChart />)
+    await screen.findByLabelText('Applied: 40')
+    const flows = [...container.querySelectorAll('svg path')]
+    act(() => void flows.forEach((f) => f.dispatchEvent(new MouseEvent('pointerenter'))))
+    expect(screen.getByRole('tooltip')).toHaveTextContent(/^(Applied|Phone screen|Technical) to \w[\w ]*: \d+$/)
   })
 })

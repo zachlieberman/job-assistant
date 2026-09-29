@@ -74,7 +74,7 @@
   }
 }
 
-/* Hero load sequence: transform and opacity only. */
+/* Entrance animations (hero and menu stagger, route change, skeleton pulse). */
 @keyframes rise {
   from {
     opacity: 0;

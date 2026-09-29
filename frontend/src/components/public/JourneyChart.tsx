@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import ApplicationJourneySankey, { SankeyHover } from '../ApplicationJourneySankey'
 import { JOURNEY_COLORS, JOURNEY_LABELS, SAMPLE_JOURNEY } from '../../content/sampleJourney'
 
-export const CHART_HEIGHT = 360
+const CHART_HEIGHT = 360
 const DEFAULT_WIDTH = 700
 const MIN_WIDTH = 300
 

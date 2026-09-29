@@ -4,7 +4,7 @@ import { useFocusTrap } from '../../hooks/useFocusTrap'
 import { stagger } from '../../lib/publicUtils'
 import { Close } from './icons'
 
-export const MENU_LINKS = [
+const MENU_LINKS = [
   { to: '/', label: 'Home' },
   { to: '/projects', label: 'Projects' },
   { to: '/experience', label: 'Experience' },

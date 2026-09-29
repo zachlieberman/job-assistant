@@ -24,13 +24,13 @@ function TimelineItem({ job }: { job: PortfolioExperience }) {
   )
 }
 
-/** Experience as a vertical timeline: the one place order is real. */
+/** Experience as a vertical timeline; entries follow the API's sort order. */
 export default function Timeline({ jobs }: { jobs: PortfolioExperience[] }) {
   if (!jobs.length) return <p>No experience listed yet.</p>
 
   return (
     <ol
-      aria-label="Work history, most recent first"
+      aria-label="Work history"
       className="relative before:absolute before:bottom-2 before:left-[10px] before:top-2 before:w-1 before:rounded-full before:bg-card"
     >
       {jobs.map((job) => (

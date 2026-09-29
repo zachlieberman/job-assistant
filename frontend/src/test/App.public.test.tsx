@@ -103,7 +103,7 @@ describe('App.public', () => {
   it('renders experience as a timeline at "/experience"', async () => {
     renderAt('/experience')
     expect(await screen.findByRole('heading', { name: 'Engineer' })).toBeInTheDocument()
-    expect(screen.getByRole('list', { name: /Work history/ })).toBeInTheDocument()
+    expect(screen.getByRole('list', { name: 'Work history' })).toBeInTheDocument()
   })
 
   it('shows an error with Retry on the experience page', async () => {

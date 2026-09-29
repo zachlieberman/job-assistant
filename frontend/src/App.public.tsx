@@ -5,6 +5,7 @@ import Home from './pages/Home'
 import Projects from './pages/Projects'
 import Experience from './pages/Experience'
 import Contact from './pages/Contact'
+import PageErrorBoundary from './components/public/PageErrorBoundary'
 
 const SITE = 'Zachary Lieberman'
 const TITLES: Record<string, string> = {
@@ -38,12 +39,14 @@ export default function App() {
         className="mx-auto max-w-page px-5 pb-32 pt-8 sm:px-8 sm:pt-16"
       >
         <div key={pathname} className="route-in">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/projects" element={<Projects />} />
-            <Route path="/experience" element={<Experience />} />
-            <Route path="/contact" element={<Contact />} />
-          </Routes>
+          <PageErrorBoundary>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/projects" element={<Projects />} />
+              <Route path="/experience" element={<Experience />} />
+              <Route path="/contact" element={<Contact />} />
+            </Routes>
+          </PageErrorBoundary>
         </div>
       </main>
     </div>

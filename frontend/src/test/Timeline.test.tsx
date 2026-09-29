@@ -11,7 +11,7 @@ const jobs: PortfolioExperience[] = [
 describe('Timeline', () => {
   it('renders an ordered list with one entry per job', () => {
     render(<Timeline jobs={jobs} />)
-    const list = screen.getByRole('list', { name: /Work history/ })
+    const list = screen.getByRole('list', { name: 'Work history' })
     expect(list.tagName).toBe('OL')
     expect(screen.getAllByRole('listitem').filter((li) => li.tagName === 'LI' && li.parentElement === list)).toHaveLength(2)
   })

@@ -14,10 +14,8 @@ export default function Projects() {
       <p className="mt-6 max-w-prose">
         Things I've built. The first one runs live, right on this page.
       </p>
-      <div className="mt-12 grid gap-4 sm:gap-6 md:grid-cols-2">
-        <div className="md:col-span-2">
-          <JourneyDemoCard />
-        </div>
+      <div className="mt-12">
+        <JourneyDemoCard />
       </div>
       <div className="mt-4 sm:mt-6">
         <AsyncView resource={state} onRetry={retry} what="the projects" fallback={<CardsSkeleton count={4} />}>

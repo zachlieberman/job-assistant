@@ -14,7 +14,7 @@ interface ContactLink {
   value: string
 }
 
-export function contactLinks(bio: PortfolioBio): ContactLink[] {
+function contactLinks(bio: PortfolioBio): ContactLink[] {
   const email = bio.email ? { label: 'Email', href: `mailto:${bio.email}`, value: bio.email } : null
   const social = (label: string, url: string | null) => {
     const href = safeHref(url)

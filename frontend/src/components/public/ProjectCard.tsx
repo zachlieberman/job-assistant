@@ -50,7 +50,7 @@ export default function ProjectCard({ project, featured = false }: Props) {
         </div>
       </div>
       <ul aria-label="Technologies" className="flex flex-wrap gap-2 text-base">
-        {project.tags.map((tag) => (
+        {(project.tags ?? []).map((tag) => (
           <li key={tag} className="rounded-full bg-paper px-4 py-1.5">
             {tag}
           </li>

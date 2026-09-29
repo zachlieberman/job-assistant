@@ -40,19 +40,47 @@ describe('useApiResource', () => {
     await act(async () => {
       renderHook(() => useApiResource(vi.fn().mockResolvedValue({ data: 'kept' }), 'k2'))
     })
+    const logged = vi.spyOn(console, 'error').mockImplementation(() => {})
     const failing = vi.fn().mockRejectedValue(new Error('down'))
     const { result } = renderHook(() => useApiResource(failing, 'k2'))
-    await waitFor(() => expect(failing).toHaveBeenCalled())
+    await waitFor(() => expect(logged).toHaveBeenCalled()) // the catch branch has run
     expect(result.current.state).toEqual({ status: 'success', data: 'kept' })
+    logged.mockRestore()
   })
 
-  it('ignores a response that arrives after unmount', async () => {
+  it('does not cache a response that arrives after unmount', async () => {
     let resolve!: (v: { data: string }) => void
-    const fetcher = vi.fn().mockReturnValue(new Promise((r) => (resolve = r)))
-    const { result, unmount } = renderHook(() => useApiResource<string>(fetcher))
-    unmount()
-    resolve({ data: 'late' })
+    const late = vi.fn(() => new Promise<{ data: string }>((r) => (resolve = r)))
+    renderHook(() => useApiResource(late, 'late')).unmount()
+    await act(async () => resolve({ data: 'late' }))
+
+    const next = renderHook(() => useApiResource(() => new Promise<{ data: string }>(() => {}), 'late'))
+    expect(next.result.current.state.status).toBe('loading')
+  })
+
+  it('ignores a response for the previous key after the key changes', async () => {
+    const resolvers: Record<string, (v: { data: string }) => void> = {}
+    const fetcher = vi.fn(() => new Promise<{ data: string }>((r) => (resolvers[fetcher.mock.calls.length] = r)))
+    const { result, rerender } = renderHook(({ k }) => useApiResource(fetcher, k), {
+      initialProps: { k: 'one' },
+    })
+    rerender({ k: 'two' })
+    await act(async () => resolvers[1]({ data: 'from-one' }))
     expect(result.current.state.status).toBe('loading')
+    await act(async () => resolvers[2]({ data: 'from-two' }))
+    expect(result.current.state).toEqual({ status: 'success', data: 'from-two' })
+  })
+
+  it('turns a hung request into an error after the timeout', async () => {
+    vi.useFakeTimers()
+    const logged = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const { result } = renderHook(() => useApiResource(() => new Promise<{ data: string }>(() => {})))
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(15_000)
+    })
+    expect(result.current.state.status).toBe('error')
+    logged.mockRestore()
+    vi.useRealTimers()
   })
 
   it('does not show a previous key\'s data after the key changes', async () => {
