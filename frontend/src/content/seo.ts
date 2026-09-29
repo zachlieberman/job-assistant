@@ -7,16 +7,16 @@ export const OG_IMAGE_ALT =
   'Zachary Lieberman, Software Engineer in Los Angeles: I build careful software for real problems.'
 
 export interface PageSeo {
-  /** Kept identical to the document.title announcement in App.public. */
+  /** Also the document.title that App.public announces on navigation. */
   title: string
   description: string
   path: string
 }
 
 export const HOME_SEO: PageSeo = {
-  title: SITE_NAME,
+  title: `${SITE_NAME}, Software Engineer in Los Angeles`,
   description:
-    'Zachary Lieberman is a software engineer in Los Angeles, CA. He builds backend services, data layers, APIs and product features in Python, Go and TypeScript.',
+    'Zachary Lieberman is a software engineer in Los Angeles, California. He builds backend services, data layers, APIs and features in Python, Go and TypeScript.',
   path: '/',
 }
 
@@ -37,6 +37,6 @@ export const EXPERIENCE_SEO: PageSeo = {
 export const CONTACT_SEO: PageSeo = {
   title: `Contact | ${SITE_NAME}`,
   description:
-    'Contact Zachary Lieberman, a software engineer in Los Angeles, CA. Email is the fastest way to reach him about opportunities, projects or what you are building.',
+    'Contact Zachary Lieberman, a software engineer in Los Angeles, California. Email is the fastest way to reach him about jobs, projects or what you are building.',
   path: '/contact',
 }

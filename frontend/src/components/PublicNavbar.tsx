@@ -34,7 +34,7 @@ export default function PublicNavbar() {
             type="button"
             aria-label="Open menu"
             aria-expanded={open}
-            aria-controls={MENU_ID}
+            aria-controls={open ? MENU_ID : undefined}
             onClick={() => setOpen(true)}
             className="flex h-12 w-12 items-center justify-center rounded-full bg-ink text-paper transition-colors hover:bg-body"
           >

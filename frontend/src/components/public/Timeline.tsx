@@ -13,7 +13,7 @@ function TimelineItem({ job }: { job: PortfolioExperience }) {
         className="absolute left-0 top-2 h-6 w-6 rounded-full border-4 border-ink bg-paper transition-colors duration-300 data-[active=true]:bg-ink"
       />
       <p className="text-base">{job.period}</p>
-      <h3 className="display display-md mt-2">{job.role}</h3>
+      <h2 className="display display-md mt-2">{job.role}</h2>
       <p className="mt-2 text-xl text-ink">{job.company}</p>
       <ul className="mt-5 max-w-prose list-disc space-y-2 pl-5 marker:text-ink">
         {job.bullets.map((bullet, i) => (
