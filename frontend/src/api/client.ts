@@ -1,6 +1,30 @@
 import axios from 'axios'
 
+const AUTH_TOKEN_KEY = 'job_assistant_auth_token'
+
+export const getAuthToken = () => localStorage.getItem(AUTH_TOKEN_KEY)
+export const setAuthToken = (token: string) => localStorage.setItem(AUTH_TOKEN_KEY, token)
+export const clearAuthToken = () => localStorage.removeItem(AUTH_TOKEN_KEY)
+
 const api = axios.create({ baseURL: import.meta.env.VITE_API_URL ?? 'http://localhost:8000' })
+
+api.interceptors.request.use((config) => {
+  const token = getAuthToken()
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
+  }
+  return config
+})
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      clearAuthToken()
+    }
+    return Promise.reject(error)
+  },
+)
 
 // Profile
 export interface Profile {
@@ -171,6 +195,85 @@ export interface SankeyNode { name: string }
 export interface SankeyLink { source: number; target: number; value: number }
 export interface SankeyData { nodes: SankeyNode[]; links: SankeyLink[] }
 export const getApplicationJourney = () => api.get<SankeyData>('/applications/sankey-data')
+
+// Auth
+export const login = (username: string, password: string) =>
+  api.post<{ token: string }>('/auth/login', { username, password })
+
+// Portfolio
+export interface PortfolioBio {
+  id: number
+  name: string
+  title: string
+  location: string | null
+  bio: string
+  email: string | null
+  github_url: string | null
+  linkedin_url: string | null
+  updated_at: string
+}
+
+export interface PortfolioBioUpdate {
+  name?: string
+  title?: string
+  location?: string | null
+  bio?: string
+  email?: string | null
+  github_url?: string | null
+  linkedin_url?: string | null
+}
+
+export interface PortfolioProject {
+  id: number
+  name: string
+  description: string
+  tags: string[]
+  link: string | null
+  sort_order: number
+}
+
+export interface PortfolioProjectInput {
+  name: string
+  description: string
+  tags: string[]
+  link?: string | null
+  sort_order?: number
+}
+
+export interface PortfolioExperience {
+  id: number
+  role: string
+  company: string
+  period: string
+  bullets: string[]
+  sort_order: number
+}
+
+export interface PortfolioExperienceInput {
+  role: string
+  company: string
+  period: string
+  bullets: string[]
+  sort_order?: number
+}
+
+export const getPortfolioBio = () => api.get<PortfolioBio>('/portfolio/bio')
+export const updatePortfolioBio = (payload: PortfolioBioUpdate) =>
+  api.put<PortfolioBio>('/portfolio/bio', payload)
+
+export const listPortfolioProjects = () => api.get<PortfolioProject[]>('/portfolio/projects')
+export const createPortfolioProject = (payload: PortfolioProjectInput) =>
+  api.post<PortfolioProject>('/portfolio/projects', payload)
+export const updatePortfolioProject = (id: number, payload: Partial<PortfolioProjectInput>) =>
+  api.put<PortfolioProject>(`/portfolio/projects/${id}`, payload)
+export const deletePortfolioProject = (id: number) => api.delete(`/portfolio/projects/${id}`)
+
+export const listPortfolioExperience = () => api.get<PortfolioExperience[]>('/portfolio/experience')
+export const createPortfolioExperience = (payload: PortfolioExperienceInput) =>
+  api.post<PortfolioExperience>('/portfolio/experience', payload)
+export const updatePortfolioExperience = (id: number, payload: Partial<PortfolioExperienceInput>) =>
+  api.put<PortfolioExperience>(`/portfolio/experience/${id}`, payload)
+export const deletePortfolioExperience = (id: number) => api.delete(`/portfolio/experience/${id}`)
 
 // Interview
 export const generateInterviewPrep = (

@@ -1,10 +1,21 @@
 import os
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from dotenv import load_dotenv
+from app.auth import require_auth
 from app.database import init_db
-from app.routes import resume, cover_letter, applications, interview, profile, resumes
+from app.routes import (
+    applications,
+    auth,
+    cover_letter,
+    interview,
+    portfolio,
+    profile,
+    resume,
+    resumes,
+)
+from app.seed import seed_portfolio
 
 load_dotenv()
 
@@ -13,7 +24,10 @@ load_dotenv()
 async def lifespan(app: FastAPI):
     if not os.getenv("ANTHROPIC_API_KEY"):
         raise RuntimeError("ANTHROPIC_API_KEY is not set — add it to backend/.env")
+    if not os.getenv("ADMIN_USERNAME") or not os.getenv("ADMIN_PASSWORD"):
+        raise RuntimeError("ADMIN_USERNAME/ADMIN_PASSWORD are not set — add them to backend/.env")
     await init_db()
+    await seed_portfolio()
     yield
 
 
@@ -40,12 +54,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(profile.router)
-app.include_router(resumes.router)
-app.include_router(resume.router)
-app.include_router(cover_letter.router)
-app.include_router(applications.router)
-app.include_router(interview.router)
+app.include_router(auth.router)
+app.include_router(portfolio.router)
+
+_private = [Depends(require_auth)]
+app.include_router(profile.router, dependencies=_private)
+app.include_router(resumes.router, dependencies=_private)
+app.include_router(resume.router, dependencies=_private)
+app.include_router(cover_letter.router, dependencies=_private)
+app.include_router(applications.router, dependencies=_private)
+app.include_router(interview.router, dependencies=_private)
 
 
 @app.get("/health")

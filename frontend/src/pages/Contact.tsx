@@ -1,10 +1,33 @@
-const links = [
-  { label: 'Email', href: 'mailto:you@example.com', value: 'you@example.com' },
-  { label: 'GitHub', href: 'https://github.com/your-username', value: 'github.com/your-username' },
-  { label: 'LinkedIn', href: 'https://linkedin.com/in/your-username', value: 'linkedin.com/in/your-username' },
-]
+import { useEffect, useState } from 'react'
+import { PortfolioBio, getPortfolioBio } from '../api/client'
 
 export default function Contact() {
+  const [bio, setBio] = useState<PortfolioBio | null>(null)
+  const [error, setError] = useState(false)
+
+  useEffect(() => {
+    getPortfolioBio()
+      .then((res) => setBio(res.data))
+      .catch(() => setError(true))
+  }, [])
+
+  if (error) return <p className="text-red-400">Failed to load. Please refresh the page.</p>
+  if (!bio) return <p className="text-gray-500">Loading...</p>
+
+  const links = [
+    bio.email && { label: 'Email', href: `mailto:${bio.email}`, value: bio.email },
+    bio.github_url && {
+      label: 'GitHub',
+      href: bio.github_url,
+      value: bio.github_url.replace(/^https?:\/\//, ''),
+    },
+    bio.linkedin_url && {
+      label: 'LinkedIn',
+      href: bio.linkedin_url,
+      value: bio.linkedin_url.replace(/^https?:\/\//, ''),
+    },
+  ].filter((link): link is { label: string; href: string; value: string } => Boolean(link))
+
   return (
     <div className="max-w-lg">
       <h1 className="text-3xl font-bold text-white mb-4">Get in Touch</h1>

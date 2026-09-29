@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { clearAuthToken, getAuthToken } from '../api/client'
 
 const portfolioLinks = [
   { to: '/', label: 'Home' },
@@ -13,13 +14,16 @@ const trackerLinks = [
   { to: '/tracker/new', label: 'New Application' },
   { to: '/tracker/journey', label: 'Journey' },
   { to: '/tracker/profile', label: 'Profile' },
+  { to: '/admin', label: 'Edit Portfolio' },
 ]
 
 export default function Navbar() {
   const { pathname } = useLocation()
+  const navigate = useNavigate()
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
-  const isInTracker = pathname.startsWith('/tracker')
+  const isInTracker = pathname.startsWith('/tracker') || pathname.startsWith('/admin')
+  const isLoggedIn = Boolean(getAuthToken())
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -31,11 +35,17 @@ export default function Navbar() {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
+  function handleLogout() {
+    clearAuthToken()
+    setDropdownOpen(false)
+    navigate('/')
+  }
+
   return (
     <nav className="bg-gray-900/80 backdrop-blur border-b border-gray-800 px-6 sticky top-0 z-10">
       <div className="max-w-6xl mx-auto flex items-center gap-10 h-16">
         <Link to="/" className="font-bold text-white text-base tracking-tight">
-          Your<span className="text-indigo-400">Name</span>
+          Zachary<span className="text-indigo-400">Lieberman</span>
         </Link>
         <div className="flex items-center gap-1">
           {portfolioLinks.map(({ to, label }) => (
@@ -79,6 +89,23 @@ export default function Navbar() {
                     {label}
                   </Link>
                 ))}
+                <div className="border-t border-gray-800 my-1" />
+                {isLoggedIn ? (
+                  <button
+                    onClick={handleLogout}
+                    className="w-full text-left px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-800/60 transition-colors"
+                  >
+                    Log Out
+                  </button>
+                ) : (
+                  <Link
+                    to="/login"
+                    onClick={() => setDropdownOpen(false)}
+                    className="block px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-800/60 transition-colors"
+                  >
+                    Log In
+                  </Link>
+                )}
               </div>
             )}
           </div>
