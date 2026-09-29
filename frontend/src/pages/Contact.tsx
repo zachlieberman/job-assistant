@@ -64,21 +64,23 @@ export default function Contact() {
       <h1 className="display display-xl">
         Let's talk <span className="text-mist">about what you're building.</span>
       </h1>
-      <p className="mt-8 max-w-prose">
-        Happy to talk about opportunities, projects, or anything else. Email is the fastest way to
-        reach me.
-      </p>
-      <div className="mt-12 grid gap-12 lg:grid-cols-12 lg:items-start">
+      <div className="mt-10 grid gap-12 lg:grid-cols-12 lg:items-center">
         <div className="lg:col-span-7">
-          <AsyncView resource={state} onRetry={retry} what="the contact details" fallback={<ContactSkeleton />}>
-            {(bio) => <ContactList links={contactLinks(bio)} />}
-          </AsyncView>
+          <p className="max-w-prose">
+            Happy to talk about opportunities, projects, or anything else. Email is the fastest way
+            to reach me.
+          </p>
+          <div className="mt-10 max-w-2xl">
+            <AsyncView resource={state} onRetry={retry} what="the contact details" fallback={<ContactSkeleton />}>
+              {(bio) => <ContactList links={contactLinks(bio)} />}
+            </AsyncView>
+          </div>
         </div>
         <div className="lg:col-span-4 lg:col-start-9">
           <Photo
             src={bernabeu}
             alt="Zachary smiling in a blue polo, leaning on barriers in front of the pitch at the Santiago Bernabéu stadium"
-            className="max-w-md"
+            className="max-w-md lg:max-w-none"
           />
         </div>
       </div>

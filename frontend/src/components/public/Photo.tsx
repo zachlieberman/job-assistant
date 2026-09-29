@@ -14,7 +14,7 @@ export default function Photo({ src, alt, className = '' }: Props) {
       height={1024}
       loading="lazy"
       decoding="async"
-      className={`aspect-[3/4] w-full rounded-[2rem] bg-card object-cover ${className}`}
+      className={`aspect-[4/5] w-full rounded-[2rem] bg-card object-cover ${className}`}
     />
   )
 }

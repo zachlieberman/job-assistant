@@ -21,19 +21,19 @@ export default function Hero({ bio }: { bio: PortfolioBio }) {
       <h1 id="hero-title" className="display display-xl rise mt-4" style={stagger(2)}>
         {HEADLINE_LEAD} <span className="text-mist">{HEADLINE_TAIL}</span>
       </h1>
-      <div className="mt-10 lg:grid lg:grid-cols-12 lg:gap-8">
-        <div className="rise lg:col-span-5" style={stagger(3)}>
-          <PillLink to="/projects" arrow>
+      <div className="mt-10 grid gap-10 lg:grid-cols-12 lg:items-center lg:gap-8">
+        <div className="rise lg:col-span-6 lg:col-start-6 lg:row-start-1" style={stagger(3)}>
+          <p className="font-bold text-ink">{role}</p>
+          <p className="mt-3 max-w-prose whitespace-pre-line">{bio.bio}</p>
+          <PillLink to="/projects" arrow className="mt-8">
             See my work
           </PillLink>
         </div>
-        <div className="rise mt-8 lg:col-span-5 lg:col-start-8 lg:mt-0" style={stagger(4)}>
-          <p className="font-bold text-ink">{role}</p>
-          <p className="mt-3 max-w-prose whitespace-pre-line">{bio.bio}</p>
+        <div className="rise lg:col-span-4 lg:col-start-1 lg:row-start-1" style={stagger(4)}>
           <Photo
             src={sunset}
             alt="Zachary smiling and holding his small brown dog outdoors at a bright orange sunset by the ocean"
-            className="mt-10 max-w-md"
+            className="max-w-md lg:max-w-none"
           />
         </div>
       </div>
