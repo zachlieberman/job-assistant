@@ -1,5 +1,7 @@
 import { getPortfolioBio } from '../api/client'
 import type { PortfolioBio } from '../api/client'
+import Seo from '../components/Seo'
+import { CONTACT_SEO } from '../content/seo'
 import AsyncView from '../components/public/AsyncView'
 import bernabeu from '../assets/contact-bernabeu.jpg'
 import Photo from '../components/public/Photo'
@@ -61,6 +63,7 @@ export default function Contact() {
 
   return (
     <div>
+      <Seo {...CONTACT_SEO} />
       <h1 className="display display-xl">
         Let's talk <span className="text-mist">about what you're building.</span>
       </h1>

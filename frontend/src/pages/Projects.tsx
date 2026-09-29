@@ -1,4 +1,6 @@
 import { listPortfolioProjects } from '../api/client'
+import Seo from '../components/Seo'
+import { PROJECTS_SEO } from '../content/seo'
 import AsyncView from '../components/public/AsyncView'
 import JourneyDemoCard from '../components/public/JourneyDemoCard'
 import { CardsSkeleton } from '../components/public/PageSkeletons'
@@ -10,6 +12,7 @@ export default function Projects() {
 
   return (
     <div>
+      <Seo {...PROJECTS_SEO} />
       <h1 className="display display-xl">Projects</h1>
       <p className="mt-6 max-w-prose">
         Things I've built. The first one runs live, right on this page.

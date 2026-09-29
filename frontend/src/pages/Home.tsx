@@ -1,4 +1,6 @@
 import { getPortfolioBio } from '../api/client'
+import Seo from '../components/Seo'
+import { HOME_SEO } from '../content/seo'
 import AsyncView from '../components/public/AsyncView'
 import Hero from '../components/public/Hero'
 import { HeroSkeleton } from '../components/public/PageSkeletons'
@@ -10,6 +12,7 @@ export default function Home() {
 
   return (
     <>
+      <Seo {...HOME_SEO} />
       <AsyncView
         resource={state}
         onRetry={retry}
