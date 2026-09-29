@@ -3,15 +3,20 @@ import { PortfolioProject, listPortfolioProjects } from '../api/client'
 
 export default function Projects() {
   const [projects, setProjects] = useState<PortfolioProject[] | null>(null)
+  const [error, setError] = useState(false)
 
   useEffect(() => {
-    listPortfolioProjects().then((res) => setProjects(res.data))
+    listPortfolioProjects()
+      .then((res) => setProjects(res.data))
+      .catch(() => setError(true))
   }, [])
 
   return (
     <div>
       <h1 className="text-3xl font-bold text-white mb-8">Projects</h1>
-      {!projects ? (
+      {error ? (
+        <p className="text-red-400">Failed to load. Please refresh the page.</p>
+      ) : !projects ? (
         <p className="text-gray-500">Loading...</p>
       ) : (
         <div className="grid sm:grid-cols-2 gap-5">

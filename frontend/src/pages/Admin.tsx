@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   PortfolioBio,
   PortfolioExperience,
@@ -19,16 +20,32 @@ import {
 const inputClass =
   'w-full bg-gray-900 border border-gray-800 rounded-lg px-3 py-2 text-sm text-gray-100 focus:outline-none focus:border-indigo-500'
 
+const ERROR_MESSAGE = 'Something went wrong — check your connection and try again.'
+
 export default function Admin() {
+  const navigate = useNavigate()
   const [bio, setBio] = useState<PortfolioBio | null>(null)
   const [projects, setProjects] = useState<PortfolioProject[]>([])
   const [experience, setExperience] = useState<PortfolioExperience[]>([])
   const [savedMessage, setSavedMessage] = useState('')
+  const [error, setError] = useState('')
 
   useEffect(() => {
-    getPortfolioBio().then((res) => setBio(res.data))
-    listPortfolioProjects().then((res) => setProjects(res.data))
-    listPortfolioExperience().then((res) => setExperience(res.data))
+    async function load() {
+      try {
+        const [bioRes, projectsRes, experienceRes] = await Promise.all([
+          getPortfolioBio(),
+          listPortfolioProjects(),
+          listPortfolioExperience(),
+        ])
+        setBio(bioRes.data)
+        setProjects(projectsRes.data)
+        setExperience(experienceRes.data)
+      } catch {
+        setError('Failed to load portfolio content.')
+      }
+    }
+    load()
   }, [])
 
   function flashSaved() {
@@ -36,82 +53,118 @@ export default function Admin() {
     setTimeout(() => setSavedMessage(''), 1500)
   }
 
+  async function withErrorHandling(action: () => Promise<void>) {
+    try {
+      setError('')
+      await action()
+    } catch {
+      setError(ERROR_MESSAGE)
+    }
+  }
+
+  function useCrudActions<T extends { id: number }>(
+    setItems: React.Dispatch<React.SetStateAction<T[]>>,
+    api: {
+      create: (payload: never) => Promise<{ data: T }>
+      update: (id: number, payload: never) => Promise<{ data: T }>
+      remove: (id: number) => Promise<unknown>
+    },
+  ) {
+    return {
+      add: (payload: never) =>
+        withErrorHandling(async () => {
+          const res = await api.create(payload)
+          setItems((prev) => [...prev, res.data])
+        }),
+      save: (id: number, payload: never) =>
+        withErrorHandling(async () => {
+          const res = await api.update(id, payload)
+          setItems((prev) => prev.map((item) => (item.id === id ? res.data : item)))
+          flashSaved()
+        }),
+      remove: (id: number, confirmMessage: string) => {
+        if (!confirm(confirmMessage)) return Promise.resolve()
+        return withErrorHandling(async () => {
+          await api.remove(id)
+          setItems((prev) => prev.filter((item) => item.id !== id))
+        })
+      },
+    }
+  }
+
+  const projectActions = useCrudActions<PortfolioProject>(setProjects, {
+    create: createPortfolioProject,
+    update: updatePortfolioProject,
+    remove: deletePortfolioProject,
+  })
+
+  const experienceActions = useCrudActions<PortfolioExperience>(setExperience, {
+    create: createPortfolioExperience,
+    update: updatePortfolioExperience,
+    remove: deletePortfolioExperience,
+  })
+
   async function handleSaveBio(e: React.FormEvent) {
     e.preventDefault()
     if (!bio) return
-    const res = await updatePortfolioBio({
-      name: bio.name,
-      title: bio.title,
-      location: bio.location,
-      bio: bio.bio,
-      email: bio.email,
-      github_url: bio.github_url,
-      linkedin_url: bio.linkedin_url,
+    await withErrorHandling(async () => {
+      const res = await updatePortfolioBio({
+        name: bio.name,
+        title: bio.title,
+        location: bio.location,
+        bio: bio.bio,
+        email: bio.email,
+        github_url: bio.github_url,
+        linkedin_url: bio.linkedin_url,
+      })
+      setBio(res.data)
+      flashSaved()
     })
-    setBio(res.data)
-    flashSaved()
   }
 
-  async function handleAddProject() {
-    const res = await createPortfolioProject({
+  const handleAddProject = () =>
+    projectActions.add({
       name: 'New Project',
       description: '',
       tags: [],
       sort_order: projects.length,
-    })
-    setProjects((prev) => [...prev, res.data])
-  }
+    } as never)
 
-  async function handleSaveProject(project: PortfolioProject) {
-    const res = await updatePortfolioProject(project.id, {
+  const handleSaveProject = (project: PortfolioProject) =>
+    projectActions.save(project.id, {
       name: project.name,
       description: project.description,
       tags: project.tags,
       link: project.link,
       sort_order: project.sort_order,
-    })
-    setProjects((prev) => prev.map((p) => (p.id === project.id ? res.data : p)))
-    flashSaved()
-  }
+    } as never)
 
-  async function handleDeleteProject(id: number) {
-    if (!confirm('Delete this project?')) return
-    await deletePortfolioProject(id)
-    setProjects((prev) => prev.filter((p) => p.id !== id))
-  }
+  const handleDeleteProject = (id: number) => projectActions.remove(id, 'Delete this project?')
 
-  async function handleAddExperience() {
-    const res = await createPortfolioExperience({
+  const handleAddExperience = () =>
+    experienceActions.add({
       role: 'New Role',
       company: '',
       period: '',
       bullets: [],
       sort_order: experience.length,
-    })
-    setExperience((prev) => [...prev, res.data])
-  }
+    } as never)
 
-  async function handleSaveExperience(entry: PortfolioExperience) {
-    const res = await updatePortfolioExperience(entry.id, {
+  const handleSaveExperience = (entry: PortfolioExperience) =>
+    experienceActions.save(entry.id, {
       role: entry.role,
       company: entry.company,
       period: entry.period,
       bullets: entry.bullets,
       sort_order: entry.sort_order,
-    })
-    setExperience((prev) => prev.map((e) => (e.id === entry.id ? res.data : e)))
-    flashSaved()
-  }
+    } as never)
 
-  async function handleDeleteExperience(id: number) {
-    if (!confirm('Delete this experience entry?')) return
-    await deletePortfolioExperience(id)
-    setExperience((prev) => prev.filter((e) => e.id !== id))
-  }
+  const handleDeleteExperience = (id: number) =>
+    experienceActions.remove(id, 'Delete this experience entry?')
 
   function handleLogout() {
     clearAuthToken()
-    window.location.href = '/login'
+    navigate('/')
   }
 
   return (
@@ -128,6 +181,12 @@ export default function Admin() {
           </button>
         </div>
       </div>
+
+      {error && (
+        <p className="text-sm text-red-400 bg-red-500/10 border border-red-500/30 rounded-lg px-4 py-2">
+          {error}
+        </p>
+      )}
 
       {/* Bio section */}
       {bio && (

@@ -4,11 +4,15 @@ import { PortfolioBio, getPortfolioBio } from '../api/client'
 
 export default function Home() {
   const [bio, setBio] = useState<PortfolioBio | null>(null)
+  const [error, setError] = useState(false)
 
   useEffect(() => {
-    getPortfolioBio().then((res) => setBio(res.data))
+    getPortfolioBio()
+      .then((res) => setBio(res.data))
+      .catch(() => setError(true))
   }, [])
 
+  if (error) return <p className="text-red-400">Failed to load. Please refresh the page.</p>
   if (!bio) return <p className="text-gray-500">Loading...</p>
 
   return (

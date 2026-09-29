@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import axios from 'axios'
 import { login, setAuthToken } from '../api/client'
 
 export default function Login() {
@@ -20,8 +21,14 @@ export default function Login() {
       const res = await login(username, password)
       setAuthToken(res.data.token)
       navigate(from, { replace: true })
-    } catch {
-      setError('Incorrect username or password.')
+    } catch (err) {
+      if (axios.isAxiosError(err) && err.response?.status === 401) {
+        setError('Incorrect username or password.')
+      } else if (axios.isAxiosError(err) && err.response?.status === 429) {
+        setError('Too many login attempts — try again in a few minutes.')
+      } else {
+        setError('Could not reach the server — check your connection and try again.')
+      }
     } finally {
       setSubmitting(false)
     }

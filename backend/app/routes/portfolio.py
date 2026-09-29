@@ -21,20 +21,27 @@ from app.schemas import (
 router = APIRouter(prefix="/portfolio", tags=["portfolio"])
 
 
+# Fixed primary key for the singleton bio row so a concurrent duplicate
+# insert actually violates a constraint (PortfolioBio otherwise has no
+# unique constraint to race against, which made the IntegrityError guard
+# below a no-op).
+_BIO_SINGLETON_ID = 1
+
+
 async def _get_or_create_bio(db: AsyncSession) -> PortfolioBio:
-    result = await db.execute(select(PortfolioBio).limit(1))
+    result = await db.execute(select(PortfolioBio).where(PortfolioBio.id == _BIO_SINGLETON_ID))
     bio = result.scalar_one_or_none()
     if bio:
         return bio
     try:
-        bio = PortfolioBio()
+        bio = PortfolioBio(id=_BIO_SINGLETON_ID)
         db.add(bio)
         await db.commit()
         await db.refresh(bio)
         return bio
     except IntegrityError:
         await db.rollback()
-        result = await db.execute(select(PortfolioBio).limit(1))
+        result = await db.execute(select(PortfolioBio).where(PortfolioBio.id == _BIO_SINGLETON_ID))
         return result.scalar_one()
 
 
@@ -46,7 +53,7 @@ async def get_bio(db: AsyncSession = Depends(get_db)):
 @router.put("/bio", response_model=PortfolioBioResponse, dependencies=[Depends(require_auth)])
 async def update_bio(payload: PortfolioBioUpdate, db: AsyncSession = Depends(get_db)):
     bio = await _get_or_create_bio(db)
-    for field, value in payload.model_dump(exclude_none=True).items():
+    for field, value in payload.model_dump(exclude_unset=True).items():
         setattr(bio, field, value)
     await db.commit()
     await db.refresh(bio)
@@ -85,7 +92,7 @@ async def update_project(
     project = result.scalar_one_or_none()
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
-    for field, value in payload.model_dump(exclude_none=True).items():
+    for field, value in payload.model_dump(exclude_unset=True).items():
         setattr(project, field, value)
     await db.commit()
     await db.refresh(project)
@@ -136,7 +143,7 @@ async def update_experience(
     entry = result.scalar_one_or_none()
     if not entry:
         raise HTTPException(status_code=404, detail="Experience entry not found")
-    for field, value in payload.model_dump(exclude_none=True).items():
+    for field, value in payload.model_dump(exclude_unset=True).items():
         setattr(entry, field, value)
     await db.commit()
     await db.refresh(entry)

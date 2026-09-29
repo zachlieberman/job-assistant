@@ -3,15 +3,20 @@ import { PortfolioExperience, listPortfolioExperience } from '../api/client'
 
 export default function Experience() {
   const [jobs, setJobs] = useState<PortfolioExperience[] | null>(null)
+  const [error, setError] = useState(false)
 
   useEffect(() => {
-    listPortfolioExperience().then((res) => setJobs(res.data))
+    listPortfolioExperience()
+      .then((res) => setJobs(res.data))
+      .catch(() => setError(true))
   }, [])
 
   return (
     <div className="max-w-3xl">
       <h1 className="text-3xl font-bold text-white mb-8">Experience</h1>
-      {!jobs ? (
+      {error ? (
+        <p className="text-red-400">Failed to load. Please refresh the page.</p>
+      ) : !jobs ? (
         <p className="text-gray-500">Loading...</p>
       ) : (
         <div className="space-y-8">

@@ -1,4 +1,4 @@
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, EmailStr, HttpUrl, field_validator
 from typing import Optional, List, Literal
 from datetime import date, datetime
 
@@ -7,15 +7,37 @@ CoverLetterTone = Literal["professional", "conversational", "enthusiastic"]
 MAX_TEXT_LENGTH = 50_000
 
 
+def _blank_to_none(value):
+    """Treat a cleared form field ("") as unset rather than an invalid email/URL."""
+    if isinstance(value, str) and value.strip() == "":
+        return None
+    return value
+
+
+def _url_to_str(value):
+    """Store validated HttpUrl values as plain strings (matches the DB column type)."""
+    return str(value) if value is not None else value
+
+
 # Portfolio bio
 class PortfolioBioUpdate(BaseModel):
     name: Optional[str] = None
     title: Optional[str] = None
     location: Optional[str] = None
     bio: Optional[str] = None
-    email: Optional[str] = None
-    github_url: Optional[str] = None
-    linkedin_url: Optional[str] = None
+    email: Optional[EmailStr] = None
+    github_url: Optional[HttpUrl] = None
+    linkedin_url: Optional[HttpUrl] = None
+
+    @field_validator("email", "github_url", "linkedin_url", mode="before")
+    @classmethod
+    def _blank_to_none_validator(cls, v):
+        return _blank_to_none(v)
+
+    @field_validator("github_url", "linkedin_url")
+    @classmethod
+    def _stringify_url(cls, v):
+        return _url_to_str(v)
 
 
 class PortfolioBioResponse(BaseModel):
@@ -37,16 +59,36 @@ class PortfolioProjectCreate(BaseModel):
     name: str
     description: str
     tags: List[str] = []
-    link: Optional[str] = None
+    link: Optional[HttpUrl] = None
     sort_order: int = 0
+
+    @field_validator("link", mode="before")
+    @classmethod
+    def _blank_link_to_none(cls, v):
+        return _blank_to_none(v)
+
+    @field_validator("link")
+    @classmethod
+    def _stringify_link(cls, v):
+        return _url_to_str(v)
 
 
 class PortfolioProjectUpdate(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
     tags: Optional[List[str]] = None
-    link: Optional[str] = None
+    link: Optional[HttpUrl] = None
     sort_order: Optional[int] = None
+
+    @field_validator("link", mode="before")
+    @classmethod
+    def _blank_link_to_none(cls, v):
+        return _blank_to_none(v)
+
+    @field_validator("link")
+    @classmethod
+    def _stringify_link(cls, v):
+        return _url_to_str(v)
 
 
 class PortfolioProjectResponse(BaseModel):
