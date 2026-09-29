@@ -46,7 +46,7 @@ export default function NewApplication() {
         location: form.location || null,
         salary_range: form.salaryRange || null,
       })
-      navigate(`/applications/${res.data.id}`, { state: { created: true } })
+      navigate(`/tracker/applications/${res.data.id}`, { state: { created: true } })
     } catch {
       setError('Failed to save application.')
       setSaving(false)

@@ -249,7 +249,7 @@ export default function ApplicationDetail() {
     setDeleting(true)
     try {
       await deleteApplication(id)
-      navigate('/')
+      navigate('/tracker')
     } catch {
       setError('Failed to delete.')
       setDeleting(false)
@@ -281,7 +281,7 @@ export default function ApplicationDetail() {
         </div>
         <div className="flex items-center gap-2">
           <button
-            onClick={() => navigate(`/interview/${id}`)}
+            onClick={() => navigate(`/tracker/interview/${id}`)}
             className="text-sm bg-gray-800 hover:bg-gray-700 px-3.5 py-2 rounded-lg font-medium transition-colors"
           >
             Interview Prep
@@ -331,7 +331,7 @@ export default function ApplicationDetail() {
         {!hasResumes ? (
           <p className="text-sm text-gray-500">
             No resumes found.{' '}
-            <Link to="/profile" className="text-indigo-400 hover:text-indigo-300 underline">
+            <Link to="/tracker/profile" className="text-indigo-400 hover:text-indigo-300 underline">
               Add a resume in your profile
             </Link>{' '}
             to tailor and generate cover letters.
