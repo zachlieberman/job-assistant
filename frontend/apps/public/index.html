@@ -3,7 +3,20 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Zachary Lieberman — portfolio, projects, and experience." />
+    <!--
+      Site-level fallback for crawlers that do not run JavaScript (link-preview bots).
+      data-rh marks these as managed by react-helmet-async, which replaces them with
+      the per-route tags from src/components/Seo.tsx as soon as the app renders.
+      Route-specific tags (canonical, og:url) are deliberately not set here.
+    -->
+    <meta data-rh="true" name="description" content="Zachary Lieberman is a software engineer in Los Angeles, CA. He builds backend services, data layers, APIs and product features in Python, Go and TypeScript." />
+    <meta data-rh="true" property="og:type" content="website" />
+    <meta data-rh="true" property="og:site_name" content="Zachary Lieberman" />
+    <meta data-rh="true" property="og:title" content="Zachary Lieberman" />
+    <meta data-rh="true" property="og:description" content="Zachary Lieberman is a software engineer in Los Angeles, CA. He builds backend services, data layers, APIs and product features in Python, Go and TypeScript." />
+    <meta data-rh="true" property="og:image" content="https://www.zachlieberman.dev/og-image.png" />
+    <meta data-rh="true" name="twitter:card" content="summary_large_image" />
+    <meta data-rh="true" name="twitter:image" content="https://www.zachlieberman.dev/og-image.png" />
     <meta name="theme-color" content="#FAFAF8" />
     <meta name="color-scheme" content="light" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />

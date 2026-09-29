@@ -1,4 +1,6 @@
 import { listPortfolioExperience } from '../api/client'
+import Seo from '../components/Seo'
+import { EXPERIENCE_SEO } from '../content/seo'
 import AsyncView from '../components/public/AsyncView'
 import { TimelineSkeleton } from '../components/public/PageSkeletons'
 import Timeline from '../components/public/Timeline'
@@ -9,6 +11,7 @@ export default function Experience() {
 
   return (
     <div>
+      <Seo {...EXPERIENCE_SEO} />
       <h1 className="display display-xl">Experience</h1>
       <p className="mt-6 max-w-prose">Where I've worked.</p>
       <div className="mt-16 max-w-3xl">
