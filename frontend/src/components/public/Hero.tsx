@@ -33,6 +33,7 @@ export default function Hero({ bio }: { bio: PortfolioBio }) {
           <Photo
             src={sunset}
             alt="Zachary smiling and holding his small brown dog outdoors at a bright orange sunset by the ocean"
+            eager
             className="max-w-md lg:max-w-none"
           />
         </div>
