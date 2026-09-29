@@ -15,8 +15,10 @@ uvicorn app.main:app --reload           # runs on :8000
 ```bash
 # From frontend/
 npm install
-npm run dev                             # runs on :5173
+npm run dev:public                      # portfolio app, runs on :5173
+npm run dev:tracker                     # job tracker app, runs on :5173 (stop the other first, or pass --port)
 ```
+The frontend builds as two separate single-page apps from one codebase — see Architecture below. `npm run build:public` and `npm run build:tracker` produce `dist/` and `dist-tracker/` respectively (the public build keeps the default `dist` name so the existing Vercel project needs no dashboard changes; plain `npm run build`/`npm run dev` are aliases for the public build, matching the previous defaults).
 
 ### Database
 ```bash
@@ -55,16 +57,23 @@ Environment: `backend/.env` needs `DATABASE_URL` and `ANTHROPIC_API_KEY`.
 ### Frontend (`frontend/src/`)
 React 18 + TypeScript + Vite + Tailwind. React Router v6 for routing. All API calls centralized in `api/client.ts` (Axios, baseURL `:8000`), which also exports all shared interfaces (`Application`, `ResumeTailorResponse`, `InterviewQuestion`, etc.). No global state — each page manages its own with `useState`/`useEffect`.
 
+The app is split into two independent builds that deploy to two separate URLs — a public portfolio (no login, no tracker code shipped) and a private, login-gated job tracker. They share `api/client.ts`, `pages/`, and Tailwind config, but have separate entry points, root components, and navbars so neither bundle pulls in the other's code:
+
+- `apps/public/index.html` + `src/main.public.tsx` + `src/App.public.tsx` — portfolio: Home, Projects, Experience, Contact, using `components/PublicNavbar.tsx`. No auth, no tracker routes.
+- `apps/tracker/index.html` + `src/main.tracker.tsx` + `src/App.tracker.tsx` — job tracker: Login, Admin, Dashboard, and all `/tracker/*` routes gated by `components/RequireAuth.tsx`, using `components/TrackerNavbar.tsx`. Ships with `<meta name="robots" content="noindex, nofollow">`.
+- `vite.config.ts` picks the root/output dir by `--mode` (`public` or `tracker`); vitest always runs against the shared `src/` root regardless of mode.
+
+Pages:
 - `pages/Dashboard` — stats cards + filterable application table
 - `pages/NewApplication` — paste JD + resume, trigger tailor/cover-letter independently, save
 - `pages/ApplicationDetail` — side-by-side original vs tailored resume, status/notes editing, delete
 - `pages/InterviewPrep` — loads app by id, checkbox question types, renders QuestionCard list
-- `components/` — Navbar, ApplicationTable, StatusBadge, ResumeEditor, QuestionCard
+- `components/` — PublicNavbar, TrackerNavbar, RequireAuth, ApplicationTable, StatusBadge, ResumeEditor, QuestionCard
 
 ## Deployment
-- Frontend deploys to Vercel, backend + Postgres deploy to Railway. See [DEPLOYMENT.md](DEPLOYMENT.md).
-- Backend reads `CORS_ORIGINS` (comma-separated) and normalizes `DATABASE_URL` to the asyncpg scheme — see `app/main.py` and `app/database.py`.
-- Frontend reads the API base URL from `VITE_API_URL` (`src/api/client.ts`).
+- Each frontend build deploys as its own Vercel project (same repo, different build command and output dir); backend + Postgres deploy to Railway. See [DEPLOYMENT.md](DEPLOYMENT.md).
+- Backend reads `CORS_ORIGINS` (comma-separated) and normalizes `DATABASE_URL` to the asyncpg scheme — see `app/main.py` and `app/database.py`. It must list both the portfolio and tracker Vercel URLs.
+- Frontend reads the API base URL from `VITE_API_URL` (`src/api/client.ts`) — set it the same way on both Vercel projects.
 
 ## Git Workflow
 - All development work must be done on a feature branch — never push directly to `main`
