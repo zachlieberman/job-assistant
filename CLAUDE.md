@@ -20,6 +20,8 @@ npm run dev:tracker                     # job tracker app, runs on :5173 (stop t
 ```
 The frontend builds as two separate single-page apps from one codebase — see Architecture below. `npm run build:public` and `npm run build:tracker` produce `dist/` and `dist-tracker/` respectively (the public build keeps the default `dist` name so the existing Vercel project needs no dashboard changes; plain `npm run build`/`npm run dev` are aliases for the public build, matching the previous defaults).
 
+`build:public` also prerenders (client build, then `vite build --ssr`, then `scripts/prerender.mjs`) and **fetches portfolio content from the API at build time**, so it needs `VITE_API_URL` pointing at a reachable backend (e.g. `VITE_API_URL=http://localhost:8000 npm run build:public` with the backend running) and fails clearly if it is not. `npm run dev:public` is unaffected and renders client-side.
+
 ### Database
 ```bash
 docker run --name job-assistant-db \
@@ -62,6 +64,8 @@ The app is split into two independent builds that deploy to two separate URLs �
 - `apps/public/index.html` + `src/main.public.tsx` + `src/App.public.tsx` — portfolio: Home, Projects, Experience, Contact, using `components/PublicNavbar.tsx`. No auth, no tracker routes.
 - `apps/tracker/index.html` + `src/main.tracker.tsx` + `src/App.tracker.tsx` — job tracker: Login, Admin, Dashboard, and all `/tracker/*` routes gated by `components/RequireAuth.tsx`, using `components/TrackerNavbar.tsx`. Ships with `<meta name="robots" content="noindex, nofollow">`.
 - `vite.config.ts` picks the root/output dir by `--mode` (`public` or `tracker`); vitest always runs against the shared `src/` root regardless of mode.
+- Public prerendering: `src/entry-server.tsx` exports `render(url)` (React Router `StaticRouter` + react-helmet-async) and `scripts/prerender.mjs` writes `index.html`, `projects/`, `experience/`, `contact/` and `404.html` into `dist/`. Build-time data is seeded into the `useApiResource` cache (`src/lib/prerenderData.ts`; keys `bio`, `projects`, `experience` must match the pages) and embedded as JSON so `main.public.tsx` hydrates with identical data. Anything that renders differently on server and client (browser-only checks in initial state) breaks hydration; `src/test/hydration.test.tsx` guards this. Server-render tests use `// @vitest-environment node`.
+- `vercel.json` has no catch-all rewrite (unknown public URLs return the prerendered `404.html` with a 404). The tracker build copies its shell to `404.html` in `vite.config.ts` so its deep links still load.
 
 Pages:
 - `pages/Dashboard` — stats cards + filterable application table
@@ -72,6 +76,7 @@ Pages:
 
 ## Deployment
 - Each frontend build deploys as its own Vercel project (same repo, different build command and output dir); backend + Postgres deploy to Railway. See [DEPLOYMENT.md](DEPLOYMENT.md).
+- Because the public build bakes content into static HTML, admin content edits reach crawlers only after a redeploy of the public Vercel project (visitors see edits immediately via the runtime refresh).
 - Backend reads `CORS_ORIGINS` (comma-separated) and normalizes `DATABASE_URL` to the asyncpg scheme — see `app/main.py` and `app/database.py`. It must list both the portfolio and tracker Vercel URLs.
 - Frontend reads the API base URL from `VITE_API_URL` (`src/api/client.ts`) — set it the same way on both Vercel projects.
 

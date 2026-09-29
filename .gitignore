@@ -36,3 +36,7 @@ dist-tracker/
 
 # Test coverage output
 coverage/
+
+# Build output and TypeScript cache
+frontend/dist-ssr/
+frontend/tsconfig.tsbuildinfo

@@ -1,15 +1,29 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import fs from 'node:fs'
 import path from 'node:path'
 import tailwindcss from 'tailwindcss'
 import autoprefixer from 'autoprefixer'
 
-export default defineConfig(({ mode }) => {
+export default defineConfig(({ mode, isSsrBuild }) => {
   const isTracker = mode === 'tracker'
   const appDir = isTracker ? 'tracker' : 'public'
+  const distDir = path.resolve(__dirname, isTracker ? 'dist-tracker' : 'dist')
+
+  // The tracker is a client-routed SPA with no prerendered pages. vercel.json no
+  // longer rewrites every URL to index.html (that made unknown public URLs return
+  // 200), so serve the shell as 404.html: the host returns it for deep links such
+  // as /tracker/applications/3 and React Router takes over in the browser.
+  const trackerSpaFallback = {
+    name: 'tracker-spa-fallback',
+    apply: 'build' as const,
+    closeBundle() {
+      fs.copyFileSync(path.join(distDir, 'index.html'), path.join(distDir, '404.html'))
+    },
+  }
 
   return {
-    plugins: [react()],
+    plugins: [react(), ...(isTracker ? [trackerSpaFallback] : [])],
     root: path.resolve(__dirname, 'apps', appDir),
     envDir: __dirname,
     // Each app's index.html lives under apps/, so map root-relative /src/ URLs
@@ -35,9 +49,13 @@ export default defineConfig(({ mode }) => {
     build: {
       // The public build keeps the default "dist" name so the existing,
       // already-configured Vercel project needs no dashboard changes.
-      outDir: path.resolve(__dirname, isTracker ? 'dist-tracker' : 'dist'),
+      // The SSR bundle used by scripts/prerender.mjs goes to its own directory.
+      outDir: isSsrBuild ? path.resolve(__dirname, 'dist-ssr') : distDir,
       emptyOutDir: true,
     },
+    // Bundle dependencies into the SSR output so prerendering does not depend on
+    // Node's CJS/ESM interop for react-helmet-async and friends.
+    ssr: { noExternal: true },
     test: {
       environment: 'jsdom',
       globals: true,

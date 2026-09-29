@@ -45,6 +45,13 @@ Setting one up from scratch:
    - `VITE_API_URL` → the Railway backend URL from step 1.6
 5. Deploy. Vercel gives you a URL like `zachlieberman.vercel.app`. This is the
    public, indexable site — no login, no tracker code is in this bundle.
+
+   The public build is **prerendered**: `npm run build` (an alias for
+   `build:public`) builds the client, builds a server bundle, then runs
+   `scripts/prerender.mjs`, which writes `index.html`, `projects/index.html`,
+   `experience/index.html`, `contact/index.html` and `404.html` with the real
+   content and per-route SEO tags already in the HTML. See
+   [Prerendering the public site](#prerendering-the-public-site) below.
 6. (Optional) Attach a custom domain under **Settings → Domains**.
 
 ## 3. Vercel — private job tracker
@@ -88,3 +95,42 @@ Now that you have both Vercel URLs:
 - **Secrets**: `ANTHROPIC_API_KEY` and `DATABASE_URL` only ever live in Railway's dashboard env vars — never commit them, and they're not exposed to either frontend.
 - **Tracker privacy**: the tracker build is `noindex`, but that only discourages search engines — it is not access control. Anyone with the tracker URL still needs valid tracker login credentials to see any data (backend routes are auth-gated), but treat the URL itself as something to keep private, since a guessable or shared link is still reachable.
 - **Preview deployments**: every branch/PR gets its own Vercel URL automatically, for each of the two projects. If you want those to work against the live API too, add each preview URL (or a wildcard pattern you check for in code) to `CORS_ORIGINS`.
+
+## Prerendering the public site
+
+The public portfolio is a React SPA, but crawlers, AI bots and link unfurlers
+(Slack, LinkedIn, X) that do not run JavaScript need the content in the HTML.
+`npm run build:public` therefore:
+
+1. `vite build --mode public` builds the client into `dist/`.
+2. `vite build --mode public --ssr ../../src/entry-server.tsx` builds a server
+   bundle into `dist-ssr/` (git-ignored, build-only).
+3. `node scripts/prerender.mjs` fetches `/portfolio/bio`, `/portfolio/projects`
+   and `/portfolio/experience` from `VITE_API_URL`, renders each route, and
+   writes the finished pages into `dist/`.
+
+Things to know:
+
+- **The build needs the API.** `VITE_API_URL` must be set for the Vercel
+  **Production and Preview** environments, and the backend must be reachable
+  while Vercel builds. If it is not (unset, unreachable after three tries, or
+  returning an unexpected shape) the build **fails** with a `prerender failed:`
+  message instead of publishing empty pages.
+- **Content updates.** Each page embeds the data it was rendered from and the
+  browser hydrates with it, then refreshes from the API as before. Edits made in
+  the admin UI therefore show up for visitors on their next page load, but the
+  static HTML that crawlers see only changes on the next deploy. After a
+  meaningful content edit, redeploy the public project (Vercel dashboard
+  **Redeploy**, or a Deploy Hook URL if you want to automate it).
+- **Real 404s.** `vercel.json` no longer rewrites every URL to `index.html`.
+  Unknown URLs get the prerendered `404.html` with an HTTP 404 status and a
+  `noindex` tag. `cleanUrls` and `trailingSlash: false` keep `/projects` as the
+  one canonical form (`/projects/` redirects to it).
+- **The tracker still works.** `vercel.json` is shared by both Vercel projects,
+  so the tracker build (`build:tracker`) copies its `index.html` to `404.html`.
+  Deep links such as `/tracker/applications/3` are served that shell and React
+  Router takes over in the browser. The status code on those is 404, which is
+  harmless for a private, `noindex` app.
+- **Verify a deploy** with `curl -s https://www.zachlieberman.dev/projects | grep -c '<h1'`
+  (raw HTML contains the content) and `curl -sI https://www.zachlieberman.dev/nope`
+  (`404`).
