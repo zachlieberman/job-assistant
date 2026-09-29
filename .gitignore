@@ -22,7 +22,6 @@ htmlcov/
 # Node
 node_modules/
 dist/
-dist-public/
 dist-tracker/
 .DS_Store
 

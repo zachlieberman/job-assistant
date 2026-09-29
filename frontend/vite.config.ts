@@ -11,7 +11,9 @@ export default defineConfig(({ mode }) => {
     root: path.resolve(__dirname, 'apps', appDir),
     envDir: __dirname,
     build: {
-      outDir: path.resolve(__dirname, isTracker ? 'dist-tracker' : 'dist-public'),
+      // The public build keeps the default "dist" name so the existing,
+      // already-configured Vercel project needs no dashboard changes.
+      outDir: path.resolve(__dirname, isTracker ? 'dist-tracker' : 'dist'),
       emptyOutDir: true,
     },
     test: {

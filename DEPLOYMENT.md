@@ -27,17 +27,25 @@ each provider's dashboard.
 
 ## 2. Vercel — public portfolio
 
+If you already have a Vercel project for this repo from before the
+public/tracker split, **you don't need to change anything here** — `npm run
+build` and `npm run dev` are aliases for the public build and it still
+outputs to `dist` (the default Output Directory Vercel already has saved),
+so the existing project keeps deploying the public portfolio with its
+current settings.
+
+Setting one up from scratch:
+
 1. Create a Vercel account at https://vercel.com (GitHub login is easiest).
 2. **Add New → Project** → import this repo.
-3. In the import screen, set **Root Directory** to `frontend`.
-4. Override the auto-detected build settings:
-   - **Build Command** → `npm run build:public`
-   - **Output Directory** → `dist-public`
-5. Under **Environment Variables**, add:
+3. In the import screen, set **Root Directory** to `frontend`. Vercel
+   auto-detects Vite (build command `npm run build`, output dir `dist`) — no
+   changes needed there.
+4. Under **Environment Variables**, add:
    - `VITE_API_URL` → the Railway backend URL from step 1.6
-6. Deploy. Vercel gives you a URL like `zachlieberman.vercel.app`. This is the
+5. Deploy. Vercel gives you a URL like `zachlieberman.vercel.app`. This is the
    public, indexable site — no login, no tracker code is in this bundle.
-7. (Optional) Attach a custom domain under **Settings → Domains**.
+6. (Optional) Attach a custom domain under **Settings → Domains**.
 
 ## 3. Vercel — private job tracker
 

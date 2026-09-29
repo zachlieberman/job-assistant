@@ -18,7 +18,7 @@ npm install
 npm run dev:public                      # portfolio app, runs on :5173
 npm run dev:tracker                     # job tracker app, runs on :5173 (stop the other first, or pass --port)
 ```
-The frontend builds as two separate single-page apps from one codebase — see Architecture below. `npm run build:public` and `npm run build:tracker` produce `dist-public/` and `dist-tracker/` respectively.
+The frontend builds as two separate single-page apps from one codebase — see Architecture below. `npm run build:public` and `npm run build:tracker` produce `dist/` and `dist-tracker/` respectively (the public build keeps the default `dist` name so the existing Vercel project needs no dashboard changes; plain `npm run build`/`npm run dev` are aliases for the public build, matching the previous defaults).
 
 ### Database
 ```bash
