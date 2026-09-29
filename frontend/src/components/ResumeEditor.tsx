@@ -1,3 +1,6 @@
+import { useId } from 'react'
+import { labelClass } from './ui/formStyles'
+
 interface Props {
   label?: string
   value: string
@@ -6,18 +9,22 @@ interface Props {
 }
 
 export default function ResumeEditor({ label, value, onChange, readOnly = false }: Props) {
+  const id = useId()
   return (
     <div className="flex flex-col gap-2">
-      {label && <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{label}</label>}
+      {label && (
+        <label htmlFor={id} className={labelClass}>
+          {label}
+        </label>
+      )}
       <textarea
+        id={id}
         value={value}
         onChange={onChange ? (e) => onChange(e.target.value) : undefined}
         readOnly={readOnly}
         rows={20}
-        className={`w-full bg-gray-900 border rounded-xl p-4 text-sm text-gray-200 font-mono resize-y focus:outline-none transition-colors leading-relaxed ${
-          readOnly
-            ? 'border-gray-800 text-gray-400 cursor-default'
-            : 'border-gray-700 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30'
+        className={`w-full resize-y rounded-panel border bg-surface p-4 font-mono text-sm leading-relaxed transition-colors duration-150 ${
+          readOnly ? 'cursor-default border-line text-muted' : 'border-field text-fg hover:border-muted focus-visible:border-brand-text'
         }`}
       />
     </div>

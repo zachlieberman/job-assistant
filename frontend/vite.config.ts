@@ -1,6 +1,8 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'node:path'
+import tailwindcss from 'tailwindcss'
+import autoprefixer from 'autoprefixer'
 
 export default defineConfig(({ mode }) => {
   const isTracker = mode === 'tracker'
@@ -8,6 +10,18 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react()],
+    // The tracker compiles with its own Tailwind config (tailwind.tracker.config.js).
+    // The public build keeps using postcss.config.js + tailwind.config.js untouched.
+    css: isTracker
+      ? {
+          postcss: {
+            plugins: [
+              tailwindcss(path.resolve(__dirname, 'tailwind.tracker.config.js')),
+              autoprefixer(),
+            ],
+          },
+        }
+      : undefined,
     root: path.resolve(__dirname, 'apps', appDir),
     envDir: __dirname,
     build: {
@@ -24,7 +38,7 @@ export default defineConfig(({ mode }) => {
       coverage: {
         provider: 'v8',
         reporter: ['text', 'html'],
-        exclude: ['src/main.public.tsx', 'src/main.tracker.tsx', 'src/index.css'],
+        exclude: ['src/main.public.tsx', 'src/main.tracker.tsx', 'src/index.css', 'src/tracker.css'],
       },
     },
   }
