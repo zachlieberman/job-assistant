@@ -55,8 +55,12 @@ cors_origins = _parse_cors_origins(os.getenv("CORS_ORIGINS", _DEFAULT_ORIGIN), _
 # Scoping the regex to our own (globally unique) team slug means only our
 # team's deployments can ever match, regardless of project name collisions.
 _VERCEL_TEAM_SLUG = os.getenv("VERCEL_TEAM_SLUG", "zach-s-squad")
+# Two preview URL shapes exist per deployment: the per-deploy URL above, and the
+# per-branch alias `<project>-git-<branch>-<team-slug>.vercel.app`, where the
+# branch name is slugified (letters, digits, hyphens) and can contain hyphens.
 _vercel_preview_origin_regex = (
-    rf"^https://job-assistant(?:-[a-zA-Z0-9]+)?-[a-zA-Z0-9]+-{re.escape(_VERCEL_TEAM_SLUG)}\.vercel\.app$"
+    r"^https://job-assistant(?:-[a-zA-Z0-9]+)?"
+    rf"(?:-[a-zA-Z0-9]+|-git-[a-zA-Z0-9-]+)-{re.escape(_VERCEL_TEAM_SLUG)}\.vercel\.app$"
 )
 
 app.add_middleware(
