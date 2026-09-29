@@ -20,7 +20,7 @@ export default function Projects() {
       <div className="mt-4 sm:mt-6">
         <AsyncView resource={state} onRetry={retry} what="the projects" fallback={<CardsSkeleton count={4} />}>
           {(projects) => (
-            <div className="grid items-start gap-4 sm:gap-6 md:grid-cols-2">
+            <div className="md:columns-2 md:gap-x-6">
               {projects.map((project) => (
                 <ProjectCard key={project.id} project={project} />
               ))}

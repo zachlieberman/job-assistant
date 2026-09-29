@@ -25,7 +25,7 @@ export default function SelectedWorks() {
           {(projects) =>
             projects.length ? (
               <>
-                <div className="grid items-start gap-4 sm:gap-6 md:grid-cols-2">
+                <div className="md:columns-2 md:gap-x-6">
                   {projects.slice(0, HOME_LIMIT).map((project, i) => (
                     <ProjectCard key={project.id} project={project} featured={i === 0} />
                   ))}
