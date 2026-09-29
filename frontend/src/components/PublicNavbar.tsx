@@ -1,35 +1,48 @@
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import { Menu } from './public/icons'
+import PillLink from './public/PillLink'
+import SiteMenu from './public/SiteMenu'
 
-const links = [
-  { to: '/', label: 'Home' },
-  { to: '/projects', label: 'Projects' },
-  { to: '/experience', label: 'Experience' },
-  { to: '/contact', label: 'Contact' },
-]
+const MENU_ID = 'site-menu'
 
 export default function PublicNavbar() {
+  const [open, setOpen] = useState(false)
   const { pathname } = useLocation()
+  const menuButtonRef = useRef<HTMLButtonElement>(null)
+  const close = useCallback(() => setOpen(false), [])
+
+  useEffect(() => {
+    setOpen(false)
+  }, [pathname])
 
   return (
-    <nav className="border-b border-gray-900 px-6">
-      <div className="max-w-6xl mx-auto flex items-center justify-between h-20">
-        <Link to="/" className="font-semibold text-white text-lg tracking-tight">
+    <header>
+      <a href="#main" className="skip-link">
+        Skip to content
+      </a>
+      <div className="mx-auto flex h-24 max-w-page items-center justify-between px-5 sm:px-8">
+        <Link to="/" className="flex min-h-11 items-center text-base font-bold text-ink sm:text-lg">
           Zachary Lieberman
         </Link>
-        <div className="flex items-center gap-8">
-          {links.map(({ to, label }) => (
-            <Link
-              key={to}
-              to={to}
-              className={`text-sm transition-colors ${
-                pathname === to ? 'text-white' : 'text-gray-500 hover:text-gray-300'
-              }`}
-            >
-              {label}
-            </Link>
-          ))}
-        </div>
+        <nav aria-label="Quick links" className="flex items-center gap-3">
+          <PillLink to="/contact" variant="outline">
+            Let's talk
+          </PillLink>
+          <button
+            ref={menuButtonRef}
+            type="button"
+            aria-label="Open menu"
+            aria-expanded={open}
+            aria-controls={MENU_ID}
+            onClick={() => setOpen(true)}
+            className="flex h-12 w-12 items-center justify-center rounded-full bg-ink text-paper transition-colors hover:bg-body"
+          >
+            <Menu />
+          </button>
+        </nav>
       </div>
-    </nav>
+      {open && <SiteMenu id={MENU_ID} onClose={close} returnFocusRef={menuButtonRef} />}
+    </header>
   )
 }
