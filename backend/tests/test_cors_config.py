@@ -34,6 +34,29 @@ def test_vercel_preview_regex_matches_own_team_previews():
     )
 
 
+def test_vercel_preview_regex_matches_tracker_project_previews():
+    # The tracker project is `job-assistant-ow59`, so its previews carry an
+    # extra project-suffix segment before the deploy hash.
+    assert re.match(
+        _vercel_preview_origin_regex,
+        "https://job-assistant-ow59-61ntpcyok-zach-s-squad.vercel.app",
+    )
+
+
+def test_vercel_preview_regex_rejects_extra_segments_and_wrong_scheme():
+    assert not re.match(
+        _vercel_preview_origin_regex, "https://job-assistant-a-b-c-zach-s-squad.vercel.app"
+    )
+    assert not re.match(
+        _vercel_preview_origin_regex,
+        "http://job-assistant-ow59-61ntpcyok-zach-s-squad.vercel.app",
+    )
+    assert not re.match(
+        _vercel_preview_origin_regex,
+        "https://job-assistant-ow59-61ntpcyok-zach-s-squad.vercel.app.evil.com",
+    )
+
+
 def test_vercel_preview_regex_rejects_other_teams_and_projects():
     # A different Vercel account could register a project literally named
     # "job-assistant-evil" — the regex must not match unless it's under our
