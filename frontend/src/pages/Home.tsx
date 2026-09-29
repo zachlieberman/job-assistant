@@ -7,7 +7,7 @@ import Hero from '../components/public/Hero'
 import { HeroSkeleton } from '../components/public/PageSkeletons'
 import SelectedWorks from '../components/public/SelectedWorks'
 import { useApiResource } from '../hooks/useApiResource'
-import { personJsonLd, websiteJsonLd } from '../lib/structuredData'
+import { homeJsonLd } from '../lib/structuredData'
 
 export default function Home() {
   const { state, retry } = useApiResource(getPortfolioBio, 'bio')
@@ -15,8 +15,7 @@ export default function Home() {
   return (
     <>
       <Seo {...HOME_SEO} />
-      <JsonLd data={websiteJsonLd} />
-      {state.status === 'success' && <JsonLd data={personJsonLd(state.data)} />}
+      <JsonLd data={homeJsonLd(state.status === 'success' ? state.data : null)} />
       <AsyncView
         resource={state}
         onRetry={retry}

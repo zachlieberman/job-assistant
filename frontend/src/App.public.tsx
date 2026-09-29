@@ -7,14 +7,12 @@ import Experience from './pages/Experience'
 import Contact from './pages/Contact'
 import NotFound from './pages/NotFound'
 import PageErrorBoundary from './components/public/PageErrorBoundary'
+import SiteFooter from './components/public/SiteFooter'
+import { CONTACT_SEO, EXPERIENCE_SEO, HOME_SEO, PROJECTS_SEO } from './content/seo'
 
-const SITE = 'Zachary Lieberman'
-const TITLES: Record<string, string> = {
-  '/': SITE,
-  '/projects': `Projects | ${SITE}`,
-  '/experience': `Experience | ${SITE}`,
-  '/contact': `Contact | ${SITE}`,
-}
+const TITLES: Record<string, string> = Object.fromEntries(
+  [HOME_SEO, PROJECTS_SEO, EXPERIENCE_SEO, CONTACT_SEO].map((page) => [page.path, page.title]),
+)
 
 export default function App() {
   const { pathname } = useLocation()
@@ -52,6 +50,7 @@ export default function App() {
           </PageErrorBoundary>
         </div>
       </main>
+      <SiteFooter />
     </div>
   )
 }

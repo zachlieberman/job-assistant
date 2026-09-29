@@ -61,7 +61,7 @@ describe('App.public', () => {
     expect(screen.getByText('Software engineer, based in New York.')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'See my work' })).toHaveAttribute('href', '/projects')
     expect(screen.getByRole('img', { name: /holding his small brown dog/ })).toHaveAttribute('width', '768')
-    expect(document.title).toBe('Zachary Lieberman')
+    expect(document.title).toBe('Zachary Lieberman, Software Engineer in Los Angeles')
   })
 
   it('lists the first three projects under "Selected works"', async () => {
@@ -145,7 +145,7 @@ describe('App.public', () => {
     renderAt('/')
     await screen.findByText("Hello! I'm Zachary Lieberman.")
     await userEvent.click(screen.getByRole('button', { name: 'Open menu' }))
-    await userEvent.click(screen.getByRole('link', { name: 'Contact' }))
+    await userEvent.click(within(screen.getByRole('dialog')).getByRole('link', { name: 'Contact' }))
     await waitFor(() => expect(screen.getByRole('main')).toHaveFocus())
   })
 

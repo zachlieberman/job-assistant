@@ -133,6 +133,18 @@ Things to know:
   Deep links such as `/tracker/applications/3` are served that shell and React
   Router takes over in the browser. The status code on those is 404, which is
   harmless for a private, `noindex` app.
+- **Sitemap.** `scripts/prerender.mjs` generates `sitemap.xml` (there is no
+  static copy). Each URL's `<lastmod>` only changes when that page's rendered
+  content changes: every URL carries a content hash in a comment, and the build
+  reads the live sitemap to keep the old date for unchanged pages. If the live
+  sitemap cannot be fetched, dates start from the build day.
+- **Headers (`vercel.json`).** Both projects send `X-Frame-Options: DENY`, a
+  `Permissions-Policy`, and a `Content-Security-Policy` (same-origin scripts,
+  styles allow inline because React sets style attributes, `connect-src`
+  allows `https://*.up.railway.app` for the API). If the backend ever moves
+  off Railway, add its origin to `connect-src` or the sites will stop loading
+  data. Hashed `/assets/*` files are cached for a year (`immutable`). Vercel
+  already sends HSTS; it is deliberately not overridden here.
 - **Verify a deploy** with `curl -s https://www.zachlieberman.dev/projects | grep -c '<h1'`
   (raw HTML contains the content) and `curl -sI https://www.zachlieberman.dev/nope`
   (`404`).

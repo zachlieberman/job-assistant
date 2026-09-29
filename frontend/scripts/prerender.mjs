@@ -6,18 +6,20 @@ import path from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { loadEnv } from 'vite'
 import { assemblePage } from './prerenderHtml.mjs'
+import { buildSitemap, hashContent, parseSitemap } from './sitemap.mjs'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const distDir = path.join(root, 'dist')
 const ssrEntry = path.join(root, 'dist-ssr', 'entry-server.js')
 
 // route -> output file. "/404" hits the catch-all route; hosts serve 404.html with a 404 status.
+// Pages with `indexed: false` are left out of the sitemap.
 const PAGES = [
-  { route: '/', file: 'index.html' },
-  { route: '/projects', file: 'projects/index.html' },
-  { route: '/experience', file: 'experience/index.html' },
-  { route: '/contact', file: 'contact/index.html' },
-  { route: '/404', file: '404.html' },
+  { route: '/', file: 'index.html', indexed: true },
+  { route: '/projects', file: 'projects/index.html', indexed: true },
+  { route: '/experience', file: 'experience/index.html', indexed: true },
+  { route: '/contact', file: 'contact/index.html', indexed: true },
+  { route: '/404', file: '404.html', indexed: false },
 ]
 
 const ATTEMPTS = 3
@@ -78,6 +80,18 @@ async function loadPortfolioData() {
   return validate({ bio, projects, experience })
 }
 
+/** The live sitemap, so unchanged pages keep their lastmod. Any failure just means "no history". */
+async function previousSitemap(siteUrl) {
+  try {
+    const response = await fetch(`${siteUrl}/sitemap.xml`, { signal: AbortSignal.timeout(10_000) })
+    if (!response.ok) throw new Error(`HTTP ${response.status}`)
+    return parseSitemap(await response.text())
+  } catch (error) {
+    console.warn(`  No previous sitemap (${error.message}); lastmod dates start from today`)
+    return new Map()
+  }
+}
+
 async function main() {
   const [template, server, data] = await Promise.all([
     fs.readFile(path.join(distDir, 'index.html'), 'utf8').catch(() => {
@@ -92,15 +106,28 @@ async function main() {
   server.seedPrerenderData(data)
   const dataJson = server.serializePrerenderData(data)
 
-  for (const { route, file } of PAGES) {
+  const sitemapPages = []
+  for (const { route, file, indexed } of PAGES) {
     const { html, head } = server.render(route)
     if (!html.includes('<h1')) throw new Error(`${route} rendered without a heading; refusing to write it.`)
     const page = assemblePage({ template, html, head, dataJson, dataId: '__PRERENDER_DATA__' })
     const target = path.join(distDir, file)
     await fs.mkdir(path.dirname(target), { recursive: true })
     await fs.writeFile(target, page)
+    if (indexed) {
+      const path = route === '/' ? '/' : route
+      sitemapPages.push({ loc: `${server.SITE_URL}${path}`, hash: hashContent(html, head) })
+    }
     console.log(`  ${route.padEnd(12)} -> dist/${file}`)
   }
+
+  const sitemap = buildSitemap({
+    pages: sitemapPages,
+    previous: await previousSitemap(server.SITE_URL),
+    today: new Date().toISOString().slice(0, 10),
+  })
+  await fs.writeFile(path.join(distDir, 'sitemap.xml'), sitemap)
+  console.log('  sitemap.xml written')
 }
 
 main().catch((error) => fail(error.message))

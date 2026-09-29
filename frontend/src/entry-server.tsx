@@ -7,6 +7,7 @@ import App from './App.public'
 
 export { seedPrerenderData, serializePrerenderData } from './lib/prerenderData'
 export type { PrerenderData } from './lib/prerenderData'
+export { SITE_URL } from './content/seo'
 
 export interface RenderedRoute {
   /** Markup for #root. */

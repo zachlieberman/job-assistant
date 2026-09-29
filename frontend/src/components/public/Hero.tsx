@@ -25,9 +25,14 @@ export default function Hero({ bio }: { bio: PortfolioBio }) {
         <div className="rise lg:col-span-6 lg:col-start-6 lg:row-start-1" style={stagger(3)}>
           <p className="font-bold text-ink">{role}</p>
           <p className="mt-3 max-w-prose whitespace-pre-line">{bio.bio}</p>
-          <PillLink to="/projects" arrow className="mt-8">
-            See my work
-          </PillLink>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <PillLink to="/projects" arrow>
+              See my work
+            </PillLink>
+            <PillLink to="/experience" variant="outline">
+              My experience
+            </PillLink>
+          </div>
         </div>
         <div className="rise lg:col-span-4 lg:col-start-1 lg:row-start-1" style={stagger(4)}>
           <Photo
