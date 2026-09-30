@@ -112,10 +112,10 @@ describe('JourneyFlowTable and Toast', () => {
   it('lists each flow as a row', () => {
     render(
       <JourneyFlowTable
-        data={{ nodes: [{ name: 'applied' }, { name: 'phone_screen' }], links: [{ source: 0, target: 1, value: 3 }] }}
+        data={{ nodes: [{ name: 'applied' }, { name: 'recruiter_screen' }], links: [{ source: 0, target: 1, value: 3 }] }}
       />,
     )
-    expect(screen.getByRole('table', { hidden: true })).toHaveTextContent('Phone screen')
+    expect(screen.getByRole('table', { hidden: true })).toHaveTextContent('Recruiter screen')
   })
   it('renders nothing without links', () => {
     const { container } = render(<JourneyFlowTable data={{ nodes: [], links: [] }} />)

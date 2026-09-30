@@ -50,8 +50,8 @@ describe('Dashboard', () => {
   it('shows KPI figures derived from every application', async () => {
     await renderDashboard([
       makeApp({ id: 1, status: 'applied' }),
-      makeApp({ id: 2, status: 'phone_screen' }),
-      makeApp({ id: 3, status: 'technical' }),
+      makeApp({ id: 2, status: 'recruiter_screen' }),
+      makeApp({ id: 3, status: 'interview' }),
       makeApp({ id: 4, status: 'offer' }),
     ])
     expect(kpi('Total applied')).toHaveTextContent('4')

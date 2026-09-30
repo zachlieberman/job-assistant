@@ -6,8 +6,9 @@ import type { SankeyData } from '../api/client'
 export const STATUS_COLORS: Record<string, string> = {
   active: '#475569',
   applied: '#60a5fa',
-  phone_screen: '#a78bfa',
-  technical: '#f59e0b',
+  recruiter_screen: '#a78bfa',
+  interview: '#f59e0b',
+  final_interview: '#fb923c',
   offer: '#34d399',
   rejected: '#f87171',
 }
@@ -15,8 +16,9 @@ export const STATUS_COLORS: Record<string, string> = {
 export const STATUS_LABELS: Record<string, string> = {
   active: 'Active',
   applied: 'Applied',
-  phone_screen: 'Phone Screen',
-  technical: 'Technical',
+  recruiter_screen: 'Recruiter Screen',
+  interview: 'Interview',
+  final_interview: 'Final Interview',
   offer: 'Offer',
   rejected: 'Rejected',
 }
@@ -84,7 +86,7 @@ export default function ApplicationJourneySankey({
     type N = D3SankeyNode<{ name: string }, object>
     type L = D3SankeyLink<{ name: string }, object>
 
-    const STATUS_ORDER = ['applied', 'phone_screen', 'technical', 'offer', 'rejected', 'active']
+    const STATUS_ORDER = ['applied', 'recruiter_screen', 'interview', 'final_interview', 'offer', 'rejected', 'active']
     const rank = (name: string) => {
       const i = STATUS_ORDER.indexOf(name)
       return i === -1 ? STATUS_ORDER.length : i

@@ -47,8 +47,9 @@ export default {
       // Status ramp: saturation rises as an application moves through the pipeline.
       stage: {
         applied: { fg: '#A3B1CC', bg: '#181C27', edge: '#2B3244', mark: '#6B7FA8' },
-        phone_screen: { fg: '#8FAAF0', bg: '#172040', edge: '#26366B', mark: '#5A83E6' },
-        technical: { fg: '#7FA3FF', bg: '#142755', edge: '#2B4A99', mark: '#4F7DFF' },
+        recruiter_screen: { fg: '#8FAAF0', bg: '#172040', edge: '#26366B', mark: '#5A83E6' },
+        interview: { fg: '#7FA3FF', bg: '#142755', edge: '#2B4A99', mark: '#4F7DFF' },
+        final_interview: { fg: '#9DB8FF', bg: '#1A3377', edge: '#3560E0', mark: '#3F73FF' },
         offer: { fg: '#FFFFFF', bg: '#2F6BFF', edge: '#2F6BFF', mark: '#2F6BFF' },
         rejected: { fg: '#9299A8', bg: '#1A1C22', edge: '#2A2D36', mark: '#6E7688' },
       },

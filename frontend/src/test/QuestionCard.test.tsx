@@ -19,7 +19,7 @@ describe('QuestionCard', () => {
 
   it('uses the blue ramp instead of other hues', () => {
     render(<QuestionCard {...baseProps} type="technical" />)
-    expect(screen.getByText('technical')).toHaveClass('text-stage-technical-fg')
+    expect(screen.getByText('technical')).toHaveClass('text-stage-interview-fg')
   })
 
   it('falls back to a neutral badge for unknown types', () => {

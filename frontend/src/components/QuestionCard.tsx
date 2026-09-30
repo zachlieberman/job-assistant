@@ -8,8 +8,8 @@ interface TypeMeta {
 
 /** Each question type gets its own icon and label as well as a blue tint. */
 const TYPE_META: Record<string, TypeMeta> = {
-  behavioral: { Icon: ChatIcon, className: 'bg-stage-phone_screen-bg text-stage-phone_screen-fg' },
-  technical: { Icon: CodeIcon, className: 'bg-stage-technical-bg text-stage-technical-fg' },
+  behavioral: { Icon: ChatIcon, className: 'bg-stage-recruiter_screen-bg text-stage-recruiter_screen-fg' },
+  technical: { Icon: CodeIcon, className: 'bg-stage-interview-bg text-stage-interview-fg' },
   culture: { Icon: UsersIcon, className: 'bg-stage-applied-bg text-stage-applied-fg' },
 }
 

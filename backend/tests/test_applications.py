@@ -123,7 +123,7 @@ async def test_sankey_data_empty(client):
 
 async def test_sankey_data_with_transitions(client):
     created = await _create_app(client)
-    await client.put(f"/applications/{created['id']}", json={"status": "phone_screen"})
+    await client.put(f"/applications/{created['id']}", json={"status": "recruiter_screen"})
     resp = await client.get("/applications/sankey-data")
     body = resp.json()
     assert len(body["nodes"]) > 0
@@ -170,7 +170,7 @@ async def test_import_csv_status_normalization(client):
     assert resp.status_code == 200
     assert resp.json()["imported"] == 1
     apps = (await client.get("/applications")).json()
-    assert apps[0]["status"] == "phone_screen"
+    assert apps[0]["status"] == "recruiter_screen"
 
 
 async def test_import_csv_wrong_extension(client):

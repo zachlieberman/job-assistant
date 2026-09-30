@@ -7,7 +7,7 @@ from httpx import AsyncClient
 from sqlalchemy import select
 
 from app.models import Application, StatusEvent
-from app.status_path import backfill_status_paths, path_transitions
+from app.status_path import backfill_status_paths, migrate_legacy_statuses, path_transitions
 
 CSV_HEADER = "Company\tRole\tStage\tDate\n"
 
@@ -16,7 +16,7 @@ def test_path_transitions_for_applied():
     assert path_transitions("applied") == [(None, "applied")]
 
 
-@pytest.mark.parametrize("status", ["phone_screen", "technical", "offer", "rejected"])
+@pytest.mark.parametrize("status", ["recruiter_screen", "interview", "final_interview", "offer", "rejected"])
 def test_path_transitions_go_straight_from_applied(status):
     assert path_transitions(status) == [(None, "applied"), ("applied", status)]
 
@@ -47,9 +47,9 @@ async def test_csv_import_counts_every_application_as_applied(client):
 async def test_create_at_later_stage_does_not_invent_stages(client):
     await client.post(
         "/applications",
-        json={"company": "X", "role": "Y", "job_description": "d", "status": "technical"},
+        json={"company": "X", "role": "Y", "job_description": "d", "status": "interview"},
     )
-    assert await _links(client) == {("applied", "technical"): 1, ("technical", "active"): 1}
+    assert await _links(client) == {("applied", "interview"): 1, ("interview", "active"): 1}
 
 
 @pytest.mark.asyncio
@@ -59,12 +59,12 @@ async def test_update_records_a_single_transition(client):
             "/applications", json={"company": "X", "role": "Y", "job_description": "d"}
         )
     ).json()
-    await client.put(f"/applications/{created['id']}", json={"status": "phone_screen"})
+    await client.put(f"/applications/{created['id']}", json={"status": "recruiter_screen"})
     await client.put(f"/applications/{created['id']}", json={"status": "rejected"})
     await client.put(f"/applications/{created['id']}", json={"status": "rejected"})
     assert await _links(client) == {
-        ("applied", "phone_screen"): 1,
-        ("phone_screen", "rejected"): 1,
+        ("applied", "recruiter_screen"): 1,
+        ("recruiter_screen", "rejected"): 1,
     }
 
 
@@ -129,3 +129,56 @@ async def test_backfill_keeps_backward_moves(db_session):
     app = await _app_with_events(db_session, "applied", history)
     assert await backfill_status_paths(db_session) == 0
     assert await _pairs(db_session, app.id) == set(history)
+
+
+@pytest.mark.asyncio
+async def test_migrate_legacy_statuses_renames_apps_and_events(db_session):
+    history = [(None, "applied"), ("applied", "phone_screen"), ("phone_screen", "technical")]
+    stamps = [datetime(2026, 1, d) for d in (1, 5, 12)]
+    app = await _app_with_events(db_session, "technical", history, stamps)
+
+    assert await migrate_legacy_statuses(db_session) == 1
+    assert await migrate_legacy_statuses(db_session) == 0
+
+    await db_session.refresh(app)
+    assert app.status == "interview"
+    assert await _pairs(db_session, app.id) == {
+        (None, "applied"),
+        ("applied", "recruiter_screen"),
+        ("recruiter_screen", "interview"),
+    }
+
+
+@pytest.mark.asyncio
+async def test_invented_path_is_undone_before_rename(db_session):
+    """Startup order: the backfill recognises old names, then they are renamed."""
+    invented = [
+        (None, "applied"),
+        ("applied", "phone_screen"),
+        ("phone_screen", "technical"),
+        ("technical", "rejected"),
+    ]
+    app = await _app_with_events(db_session, "rejected", invented)
+    await backfill_status_paths(db_session)
+    await migrate_legacy_statuses(db_session)
+    assert await _pairs(db_session, app.id) == {(None, "applied"), ("applied", "rejected")}
+
+
+@pytest.mark.asyncio
+async def test_csv_import_maps_new_and_legacy_stage_names(client):
+    rows = (
+        "A\tEng\tRecruiter Screen\t1/1/2026\n"
+        "B\tEng\tphone screen\t1/1/2026\n"
+        "C\tEng\tInterview 2\t1/1/2026\n"
+        "D\tEng\tTechnical\t1/1/2026\n"
+        "E\tEng\tFinal Interview\t1/1/2026\n"
+        "F\tEng\tNo Offer\t1/1/2026\n"
+    )
+    await client.post(
+        "/applications/import-csv",
+        files={"file": ("a.csv", CSV_HEADER + rows, "text/csv")},
+    )
+    statuses = sorted(a["status"] for a in (await client.get("/applications")).json())
+    assert statuses == sorted(
+        ["recruiter_screen", "recruiter_screen", "interview", "interview", "final_interview", "rejected"]
+    )

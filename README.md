@@ -149,7 +149,7 @@ gh pr create
 ## Features
 
 - **Profile** — store your LinkedIn, GitHub, and multiple resumes
-- **Application Tracker** — manage applications through a status pipeline (Applied → Phone Screen → Technical → Offer / Rejected)
+- **Application Tracker** — manage applications through a status pipeline (Applied → Recruiter Screen → Interview → Final Interview → Offer / Rejected)
   - Search by company or role
   - Sort by any column (Company, Role, Status, Applied date), defaulting to most recent first
   - Import applications from a CSV file (tab or comma delimited, Excel-compatible)

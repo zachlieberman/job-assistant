@@ -2,7 +2,9 @@ from pydantic import BaseModel, EmailStr, HttpUrl, field_validator
 from typing import Optional, List, Literal
 from datetime import date, datetime
 
-ApplicationStatus = Literal["applied", "phone_screen", "technical", "offer", "rejected"]
+ApplicationStatus = Literal[
+    "applied", "recruiter_screen", "interview", "final_interview", "offer", "rejected"
+]
 CoverLetterTone = Literal["professional", "conversational", "enthusiastic"]
 MAX_TEXT_LENGTH = 50_000
 

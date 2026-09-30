@@ -91,4 +91,4 @@ Pages:
 - Claude model is always `claude-sonnet-4-6` — do not change
 - Max tokens: 2000 for resume/cover letter, 1500 for interview prep
 - All Claude responses must be JSON — prompts instruct this; `claude.py` parses with error handling
-- Application statuses: `applied`, `phone_screen`, `technical`, `offer`, `rejected`
+- Application statuses: `applied`, `recruiter_screen`, `interview`, `final_interview`, `offer`, `rejected` (old `phone_screen`/`technical` rows are renamed on startup by `migrate_legacy_statuses`)

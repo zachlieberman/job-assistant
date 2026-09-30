@@ -9,7 +9,7 @@ invented; they appear only when the application is actually moved through them.
 from collections import defaultdict
 from datetime import datetime
 
-from sqlalchemy import delete, func, select
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import Application, StatusEvent
@@ -18,7 +18,14 @@ START_STATUS = "applied"
 
 Transition = tuple[str | None, str]
 
-# Stages an earlier version invented for apps created or imported past "applied".
+# Earlier status names and what they became.
+LEGACY_STATUS_RENAMES: dict[str, str] = {
+    "phone_screen": "recruiter_screen",
+    "technical": "interview",
+}
+
+# Stages an earlier version invented for apps created or imported past "applied"
+# (under the old stage names; see LEGACY_STATUS_RENAMES).
 _INVENTED_PIPELINE: tuple[str, ...] = ("applied", "phone_screen", "technical")
 _INVENTED_TERMINAL: tuple[str, ...] = ("offer", "rejected")
 
@@ -61,6 +68,32 @@ def _is_invented(status: str, events: list[tuple[Transition, datetime]]) -> bool
     stamps = {stamp for _, stamp in events}
     pairs = {pair for pair, _ in events}
     return len(events) >= 3 and len(stamps) == 1 and pairs == _invented_transitions(status)
+
+
+async def migrate_legacy_statuses(db: AsyncSession) -> int:
+    """Rename old stage names on applications and their events (idempotent).
+
+    Run after ``backfill_status_paths``, which recognises the old names.
+    Returns the number of application rows renamed.
+    """
+    try:
+        renamed = 0
+        for old, new in LEGACY_STATUS_RENAMES.items():
+            result = await db.execute(
+                update(Application).where(Application.status == old).values(status=new)
+            )
+            renamed += result.rowcount or 0
+            await db.execute(
+                update(StatusEvent).where(StatusEvent.from_status == old).values(from_status=new)
+            )
+            await db.execute(
+                update(StatusEvent).where(StatusEvent.to_status == old).values(to_status=new)
+            )
+        await db.commit()
+        return renamed
+    except Exception:
+        await db.rollback()
+        raise
 
 
 async def backfill_status_paths(db: AsyncSession) -> int:
