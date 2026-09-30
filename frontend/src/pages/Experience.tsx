@@ -3,6 +3,7 @@ import Seo from '../components/Seo'
 import { EXPERIENCE_SEO } from '../content/seo'
 import AsyncView from '../components/public/AsyncView'
 import { TimelineSkeleton } from '../components/public/PageSkeletons'
+import SkillsAndEducation from '../components/public/SkillsAndEducation'
 import Timeline from '../components/public/Timeline'
 import { useApiResource } from '../hooks/useApiResource'
 
@@ -24,6 +25,7 @@ export default function Experience() {
           {(jobs) => <Timeline jobs={jobs} />}
         </AsyncView>
       </div>
+      <SkillsAndEducation />
     </div>
   )
 }

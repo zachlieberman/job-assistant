@@ -58,6 +58,8 @@ describe('homeJsonLd', () => {
       jobTitle: 'Software Engineer',
       url: 'https://www.zachlieberman.dev/',
       image: 'https://www.zachlieberman.dev/zachary-lieberman.jpg',
+      alumniOf: { '@type': 'CollegeOrUniversity', name: 'University of Virginia' },
+      knowsAbout: expect.arrayContaining(['Python', 'AWS']),
       address: { '@type': 'PostalAddress', addressLocality: 'Los Angeles', addressRegion: 'California' },
       sameAs: ['https://github.com/zachlieberman'],
     })
