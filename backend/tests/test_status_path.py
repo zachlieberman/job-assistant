@@ -1,4 +1,4 @@
-"""Every application flows through the full pipeline in the journey Sankey."""
+"""The journey Sankey records only the history that is actually known."""
 
 from datetime import datetime
 
@@ -7,45 +7,18 @@ from httpx import AsyncClient
 from sqlalchemy import select
 
 from app.models import Application, StatusEvent
-from app.status_path import (
-    backfill_status_paths,
-    path_transitions,
-    status_path,
-    transitions_between,
-)
+from app.status_path import backfill_status_paths, path_transitions
 
 CSV_HEADER = "Company\tRole\tStage\tDate\n"
 
 
-def test_status_path_per_stage():
-    assert status_path("applied") == ("applied",)
-    assert status_path("technical") == ("applied", "phone_screen", "technical")
-    assert status_path("offer") == ("applied", "phone_screen", "technical", "offer")
-    assert status_path("rejected")[-1] == "rejected"
+def test_path_transitions_for_applied():
+    assert path_transitions("applied") == [(None, "applied")]
 
 
-def test_path_transitions_start_with_creation_event():
-    assert path_transitions("phone_screen") == [
-        (None, "applied"),
-        ("applied", "phone_screen"),
-    ]
-
-
-def test_transitions_between_fills_intermediate_stages():
-    assert transitions_between("applied", "technical") == [
-        ("applied", "phone_screen"),
-        ("phone_screen", "technical"),
-    ]
-    assert transitions_between("technical", "rejected") == [("technical", "rejected")]
-
-
-def test_transitions_between_same_status_is_noop():
-    assert transitions_between("applied", "applied") == []
-
-
-def test_transitions_between_backwards_or_from_terminal_is_single():
-    assert transitions_between("technical", "applied") == [("technical", "applied")]
-    assert transitions_between("offer", "rejected") == [("offer", "rejected")]
+@pytest.mark.parametrize("status", ["phone_screen", "technical", "offer", "rejected"])
+def test_path_transitions_go_straight_from_applied(status):
+    assert path_transitions(status) == [(None, "applied"), ("applied", status)]
 
 
 async def _links(client: AsyncClient) -> dict[tuple[str, str], int]:
@@ -63,97 +36,96 @@ async def test_csv_import_counts_every_application_as_applied(client):
     )
     assert resp.json()["imported"] == 3
     links = await _links(client)
-    # All three enter at "applied": one stays there, two move on.
-    assert links[("applied", "active")] == 1
-    assert links[("applied", "phone_screen")] == 2
-    assert links[("technical", "rejected")] == 1
-    assert links[("technical", "offer")] == 1
-
-
-@pytest.mark.asyncio
-async def test_create_at_later_stage_seeds_full_path(client):
-    await client.post(
-        "/applications",
-        json={"company": "X", "role": "Y", "job_description": "d", "status": "technical"},
-    )
-    links = await _links(client)
     assert links == {
-        ("applied", "phone_screen"): 1,
-        ("phone_screen", "technical"): 1,
-        ("technical", "active"): 1,
+        ("applied", "active"): 1,
+        ("applied", "rejected"): 1,
+        ("applied", "offer"): 1,
     }
 
 
 @pytest.mark.asyncio
-async def test_update_skipping_stages_fills_them_in(client):
+async def test_create_at_later_stage_does_not_invent_stages(client):
+    await client.post(
+        "/applications",
+        json={"company": "X", "role": "Y", "job_description": "d", "status": "technical"},
+    )
+    assert await _links(client) == {("applied", "technical"): 1, ("technical", "active"): 1}
+
+
+@pytest.mark.asyncio
+async def test_update_records_a_single_transition(client):
     created = (
         await client.post(
             "/applications", json={"company": "X", "role": "Y", "job_description": "d"}
         )
     ).json()
+    await client.put(f"/applications/{created['id']}", json={"status": "phone_screen"})
     await client.put(f"/applications/{created['id']}", json={"status": "rejected"})
-    links = await _links(client)
-    assert links == {
+    await client.put(f"/applications/{created['id']}", json={"status": "rejected"})
+    assert await _links(client) == {
         ("applied", "phone_screen"): 1,
-        ("phone_screen", "technical"): 1,
-        ("technical", "rejected"): 1,
+        ("phone_screen", "rejected"): 1,
     }
 
 
-@pytest.mark.asyncio
-async def test_backward_update_is_a_single_transition(client):
-    created = (
-        await client.post(
-            "/applications",
-            json={"company": "X", "role": "Y", "job_description": "d", "status": "technical"},
-        )
-    ).json()
-    await client.put(f"/applications/{created['id']}", json={"status": "applied"})
-    await client.put(f"/applications/{created['id']}", json={"status": "applied"})
-    links = await _links(client)
-    assert links[("technical", "applied")] == 1
-
-
-async def _legacy_app(db_session, status: str) -> Application:
-    legacy = Application(company="L", role="R", status=status, job_description="")
-    db_session.add(legacy)
-    await db_session.flush()
-    # What the old CSV import wrote: one creation event at the final stage.
-    db_session.add(StatusEvent(application_id=legacy.id, from_status=None, to_status=status))
-    await db_session.commit()
-    return legacy
-
-
-@pytest.mark.asyncio
-async def test_backfill_repairs_legacy_events_and_is_idempotent(db_session):
-    await _legacy_app(db_session, "rejected")
-
-    assert await backfill_status_paths(db_session) == 1
-    assert await backfill_status_paths(db_session) == 0
-
-    events = (await db_session.execute(select(StatusEvent))).scalars().all()
-    assert {(e.from_status, e.to_status) for e in events} == set(path_transitions("rejected"))
-
-
-@pytest.mark.asyncio
-async def test_backfill_preserves_healthy_history(db_session):
-    app = Application(company="H", role="R", status="applied", job_description="")
+async def _app_with_events(db_session, status: str, events: list, stamps=None) -> Application:
+    app = Application(company="A", role="R", status=status, job_description="")
     db_session.add(app)
     await db_session.flush()
-    # Real history with a backward move: applied -> technical -> applied.
-    stamp = datetime(2026, 1, 5, 12, 0, 0)
-    history = [(None, "applied"), ("applied", "technical"), ("technical", "applied")]
-    db_session.add_all(
-        StatusEvent(application_id=app.id, from_status=a, to_status=b, changed_at=stamp)
-        for a, b in history
-    )
+    for i, (src, dst) in enumerate(events):
+        stamp = stamps[i] if stamps else datetime(2026, 1, 1)
+        db_session.add(
+            StatusEvent(application_id=app.id, from_status=src, to_status=dst, changed_at=stamp)
+        )
     await db_session.commit()
-    await _legacy_app(db_session, "offer")
+    return app
 
-    assert await backfill_status_paths(db_session) == 1  # only the legacy app
 
-    kept = (
-        await db_session.execute(select(StatusEvent).where(StatusEvent.application_id == app.id))
-    ).scalars().all()
-    assert {(e.from_status, e.to_status) for e in kept} == set(history)
-    assert all(e.changed_at == stamp for e in kept)
+async def _pairs(db_session, app_id: int) -> set:
+    rows = await db_session.execute(select(StatusEvent).where(StatusEvent.application_id == app_id))
+    return {(e.from_status, e.to_status) for e in rows.scalars()}
+
+
+@pytest.mark.asyncio
+async def test_backfill_repairs_legacy_single_event(db_session):
+    app = await _app_with_events(db_session, "rejected", [(None, "rejected")])
+    assert await backfill_status_paths(db_session) == 1
+    assert await _pairs(db_session, app.id) == {(None, "applied"), ("applied", "rejected")}
+    assert await backfill_status_paths(db_session) == 0
+
+
+@pytest.mark.asyncio
+async def test_backfill_undoes_invented_full_path(db_session):
+    invented = [
+        (None, "applied"),
+        ("applied", "phone_screen"),
+        ("phone_screen", "technical"),
+        ("technical", "rejected"),
+    ]
+    app = await _app_with_events(db_session, "rejected", invented)
+    assert await backfill_status_paths(db_session) == 1
+    assert await _pairs(db_session, app.id) == {(None, "applied"), ("applied", "rejected")}
+    assert await backfill_status_paths(db_session) == 0
+
+
+@pytest.mark.asyncio
+async def test_backfill_keeps_real_history_even_with_full_path(db_session):
+    """A genuine full path is recorded move by move, so timestamps differ."""
+    path = [
+        (None, "applied"),
+        ("applied", "phone_screen"),
+        ("phone_screen", "technical"),
+        ("technical", "rejected"),
+    ]
+    stamps = [datetime(2026, 1, d) for d in (1, 5, 12, 20)]
+    app = await _app_with_events(db_session, "rejected", path, stamps)
+    assert await backfill_status_paths(db_session) == 0
+    assert await _pairs(db_session, app.id) == set(path)
+
+
+@pytest.mark.asyncio
+async def test_backfill_keeps_backward_moves(db_session):
+    history = [(None, "applied"), ("applied", "technical"), ("technical", "applied")]
+    app = await _app_with_events(db_session, "applied", history)
+    assert await backfill_status_paths(db_session) == 0
+    assert await _pairs(db_session, app.id) == set(history)
