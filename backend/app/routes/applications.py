@@ -10,6 +10,7 @@ from typing import Optional, List
 from app.database import get_db
 from app.models import Application, StatusEvent
 from app.schemas import ApplicationCreate, ApplicationUpdate, ApplicationResponse, ApplicationStatus
+from app.status_path import path_events, transitions_between
 
 
 CSV_STATUS_MAP: dict[str, str] = {
@@ -110,7 +111,7 @@ async def create_application(
     app = Application(**payload.model_dump())
     db.add(app)
     await db.flush()
-    db.add(StatusEvent(application_id=app.id, from_status=None, to_status=app.status))
+    db.add_all(path_events(app.id, app.status))
     await db.commit()
     await db.refresh(app)
     return app
@@ -137,7 +138,10 @@ async def update_application(
     for field, value in payload.model_dump(exclude_none=True).items():
         setattr(app, field, value)
     if payload.status and payload.status != old_status:
-        db.add(StatusEvent(application_id=app.id, from_status=old_status, to_status=payload.status))
+        db.add_all(
+            StatusEvent(application_id=app.id, from_status=src, to_status=dst)
+            for src, dst in transitions_between(old_status, payload.status)
+        )
     await db.commit()
     await db.refresh(app)
     return app
@@ -213,7 +217,7 @@ async def import_csv(file: UploadFile = File(...), db: AsyncSession = Depends(ge
         )
         db.add(app)
         await db.flush()
-        db.add(StatusEvent(application_id=app.id, from_status=None, to_status=status))
+        db.add_all(path_events(app.id, status))
         imported += 1
 
     try:

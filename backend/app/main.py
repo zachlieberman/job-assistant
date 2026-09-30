@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 from app.auth import require_auth
-from app.database import init_db
+from app.database import AsyncSessionLocal, init_db
 from app.routes import (
     applications,
     auth,
@@ -17,6 +17,7 @@ from app.routes import (
     resumes,
 )
 from app.seed import seed_portfolio
+from app.status_path import backfill_status_paths
 
 load_dotenv()
 
@@ -29,6 +30,8 @@ async def lifespan(app: FastAPI):
         raise RuntimeError("ADMIN_USERNAME/ADMIN_PASSWORD are not set — add them to backend/.env")
     await init_db()
     await seed_portfolio()
+    async with AsyncSessionLocal() as db:
+        await backfill_status_paths(db)
     yield
 
 
