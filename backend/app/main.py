@@ -1,3 +1,4 @@
+import logging
 import os
 import re
 from fastapi import Depends, FastAPI
@@ -21,6 +22,8 @@ from app.status_path import backfill_status_paths
 
 load_dotenv()
 
+logger = logging.getLogger(__name__)
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -30,8 +33,13 @@ async def lifespan(app: FastAPI):
         raise RuntimeError("ADMIN_USERNAME/ADMIN_PASSWORD are not set — add them to backend/.env")
     await init_db()
     await seed_portfolio()
-    async with AsyncSessionLocal() as db:
-        await backfill_status_paths(db)
+    try:
+        async with AsyncSessionLocal() as db:
+            repaired = await backfill_status_paths(db)
+        logger.info("Status path backfill repaired %d application(s)", repaired)
+    except Exception:
+        # A failed repair must not take the API down; it retries on next start.
+        logger.exception("Status path backfill failed; continuing startup")
     yield
 
 

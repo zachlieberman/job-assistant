@@ -7,7 +7,7 @@ journey Sankey consistent with the tracker totals, even when data is imported
 or created at a later stage.
 """
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import Application, StatusEvent
@@ -37,12 +37,14 @@ def transitions_between(old: str, new: str) -> list[Transition]:
     """Transitions to record when an application moves from ``old`` to ``new``.
 
     Moving forward along the pipeline fills in every intermediate stage; any
-    other move (backwards, out of a terminal state) is a single transition.
+    other move (backwards, out of a terminal state, or from an unknown legacy
+    status) is a single transition. Moving to the same status is a no-op.
     """
+    if old == new:
+        return []
     old_path, new_path = status_path(old), status_path(new)
     is_forward = (
-        old != new
-        and old in (*PIPELINE, *TERMINAL)
+        old in (*PIPELINE, *TERMINAL)
         and new_path[: len(old_path)] == old_path
     )
     if is_forward:
@@ -51,34 +53,52 @@ def transitions_between(old: str, new: str) -> list[Transition]:
 
 
 def path_events(application_id: int, status: str) -> list[StatusEvent]:
+    """New ``StatusEvent`` rows for the full canonical path up to ``status``."""
     return [
         StatusEvent(application_id=application_id, from_status=src, to_status=dst)
         for src, dst in path_transitions(status)
     ]
 
 
+# Arbitrary constant; serialises concurrent backfills across workers on Postgres.
+_BACKFILL_LOCK_KEY = 7_301_992
+
+
 async def backfill_status_paths(db: AsyncSession) -> int:
-    """Rebuild events for applications whose history isn't the canonical path.
+    """Repair applications whose history never starts at ``applied``.
 
-    Idempotent: applications that already match are left untouched. Returns the
-    number of applications rewritten.
+    Legacy imports recorded a single ``None -> <current stage>`` event, so they
+    are missing from the Sankey. Only those applications are rewritten with the
+    canonical path; any application that already starts at ``applied`` keeps its
+    real history (including backward moves and corrections), so this is a no-op
+    once the legacy rows are fixed. Returns the number of applications rewritten.
     """
-    apps = (await db.execute(select(Application))).scalars().all()
-    events = (await db.execute(select(StatusEvent))).scalars().all()
+    try:
+        if db.bind is not None and db.bind.dialect.name == "postgresql":
+            await db.execute(select(func.pg_advisory_xact_lock(_BACKFILL_LOCK_KEY)))
 
-    pairs_by_app: dict[int, set[Transition]] = {}
-    for e in events:
-        pairs_by_app.setdefault(e.application_id, set()).add((e.from_status, e.to_status))
+        started = set(
+            (
+                await db.execute(
+                    select(StatusEvent.application_id).where(
+                        StatusEvent.from_status.is_(None),
+                        StatusEvent.to_status == PIPELINE[0],
+                    )
+                )
+            ).scalars()
+        )
+        rows = (await db.execute(select(Application.id, Application.status))).all()
+        broken = [(app_id, status) for app_id, status in rows if app_id not in started]
+        if not broken:
+            return 0
 
-    rewritten = 0
-    for app in apps:
-        existing = pairs_by_app.get(app.id, set())
-        if existing == set(path_transitions(app.status)):
-            continue
-        await db.execute(delete(StatusEvent).where(StatusEvent.application_id == app.id))
-        db.add_all(path_events(app.id, app.status))
-        rewritten += 1
-
-    if rewritten:
+        await db.execute(
+            delete(StatusEvent).where(StatusEvent.application_id.in_([i for i, _ in broken]))
+        )
+        for app_id, status in broken:
+            db.add_all(path_events(app_id, status))
         await db.commit()
-    return rewritten
+        return len(broken)
+    except Exception:
+        await db.rollback()
+        raise
