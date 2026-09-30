@@ -1,4 +1,5 @@
 import type { PortfolioBio } from '../api/client'
+import { ALUMNI_OF, KNOWS_ABOUT } from '../content/profile'
 import { SITE_NAME, SITE_URL } from '../content/seo'
 import { safeHref } from './publicUtils'
 
@@ -35,6 +36,8 @@ function person(bio: PortfolioBio) {
     jobTitle: bio.title,
     url: HOME_URL,
     image: PERSON_IMAGE,
+    alumniOf: { '@type': 'CollegeOrUniversity', name: ALUMNI_OF },
+    knowsAbout: KNOWS_ABOUT,
     ...(postal ? { address: postal } : {}),
     ...(sameAs.length ? { sameAs } : {}),
   }
