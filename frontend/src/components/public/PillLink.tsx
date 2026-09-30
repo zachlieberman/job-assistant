@@ -7,7 +7,7 @@ type Variant = 'solid' | 'outline'
 interface Props {
   children: ReactNode
   variant?: Variant
-  /** Internal route (`/projects`) or absolute URL (opens in a new tab). */
+  /** Internal route (`/projects`), absolute URL, or a `.pdf` path (both open in a new tab). */
   to: string
   arrow?: boolean
   className?: string
@@ -24,10 +24,11 @@ const BASE =
 /** Pill-shaped link: black (solid) or outlined, with an optional arrow. */
 export default function PillLink({ children, variant = 'solid', to, arrow = false, className = '' }: Props) {
   const classes = `${BASE} ${VARIANTS[variant]} ${className}`
-  const external = /^(https?:|mailto:)/.test(to)
+  const isFile = /\.pdf$/i.test(to)
+  const external = isFile || /^(https?:|mailto:)/.test(to)
 
   if (external) {
-    const newTab = to.startsWith('http')
+    const newTab = isFile || to.startsWith('http')
     return (
       <a
         href={to}
