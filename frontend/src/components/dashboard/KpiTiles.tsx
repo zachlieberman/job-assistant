@@ -12,7 +12,7 @@ interface Tile {
 function buildTiles(kpis: Kpis): Tile[] {
   return [
     { label: 'Total applied', value: String(kpis.total), note: 'All time', Icon: BriefcaseIcon },
-    { label: 'In progress', value: String(kpis.inProgress), note: 'Phone screen or technical', Icon: ActivityIcon },
+    { label: 'In progress', value: String(kpis.inProgress), note: 'Screening or interviewing', Icon: ActivityIcon },
     { label: 'Offers', value: String(kpis.offers), note: 'Received so far', Icon: AwardIcon },
     {
       label: 'Response rate',

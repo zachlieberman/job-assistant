@@ -17,8 +17,8 @@ describe('computeKpis', () => {
   it('counts totals, in-progress, offers, and response rate', () => {
     const apps = [
       makeApp({ id: 1, status: 'applied' }),
-      makeApp({ id: 2, status: 'phone_screen' }),
-      makeApp({ id: 3, status: 'technical' }),
+      makeApp({ id: 2, status: 'recruiter_screen' }),
+      makeApp({ id: 3, status: 'interview' }),
       makeApp({ id: 4, status: 'offer' }),
     ]
     expect(computeKpis(apps)).toEqual({ total: 4, inProgress: 2, offers: 1, responseRate: 75 })
@@ -37,10 +37,10 @@ describe('statusBreakdown', () => {
   it('returns every status with counts and rounded percentages', () => {
     const apps = [makeApp({ id: 1 }), makeApp({ id: 2 }), makeApp({ id: 3, status: 'offer' })]
     const slices = statusBreakdown(apps)
-    expect(slices.map((s) => s.status)).toEqual(['applied', 'phone_screen', 'technical', 'offer', 'rejected'])
+    expect(slices.map((s) => s.status)).toEqual(['applied', 'recruiter_screen', 'interview', 'final_interview', 'offer', 'rejected'])
     expect(slices[0]).toMatchObject({ count: 2, percent: 67 })
-    expect(slices[3]).toMatchObject({ count: 1, percent: 33 })
-    expect(slices[4]).toMatchObject({ count: 0, percent: 0 })
+    expect(slices[4]).toMatchObject({ count: 1, percent: 33 })
+    expect(slices[5]).toMatchObject({ count: 0, percent: 0 })
   })
 
   it('handles an empty list without dividing by zero', () => {

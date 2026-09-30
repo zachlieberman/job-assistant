@@ -1,7 +1,15 @@
 import type { ComponentType } from 'react'
-import { AwardIcon, CodeIcon, PhoneIcon, SendIcon, XCircleIcon, type IconProps } from '../components/icons'
+import {
+  AwardIcon,
+  BriefcaseIcon,
+  PhoneIcon,
+  SendIcon,
+  UsersIcon,
+  XCircleIcon,
+  type IconProps,
+} from '../components/icons'
 
-export const STATUSES = ['applied', 'phone_screen', 'technical', 'offer', 'rejected'] as const
+export const STATUSES = ['applied', 'recruiter_screen', 'interview', 'final_interview', 'offer', 'rejected'] as const
 export type Status = (typeof STATUSES)[number]
 
 interface StatusMeta {
@@ -20,17 +28,23 @@ export const STATUS_META: Record<Status, StatusMeta> = {
     badge: 'bg-stage-applied-bg text-stage-applied-fg border-stage-applied-edge',
     mark: '#6B7FA8',
   },
-  phone_screen: {
-    label: 'Phone screen',
+  recruiter_screen: {
+    label: 'Recruiter screen',
     Icon: PhoneIcon,
-    badge: 'bg-stage-phone_screen-bg text-stage-phone_screen-fg border-stage-phone_screen-edge',
+    badge: 'bg-stage-recruiter_screen-bg text-stage-recruiter_screen-fg border-stage-recruiter_screen-edge',
     mark: '#5A83E6',
   },
-  technical: {
-    label: 'Technical',
-    Icon: CodeIcon,
-    badge: 'bg-stage-technical-bg text-stage-technical-fg border-stage-technical-edge',
+  interview: {
+    label: 'Interview',
+    Icon: UsersIcon,
+    badge: 'bg-stage-interview-bg text-stage-interview-fg border-stage-interview-edge',
     mark: '#4F7DFF',
+  },
+  final_interview: {
+    label: 'Final interview',
+    Icon: BriefcaseIcon,
+    badge: 'bg-stage-final_interview-bg text-stage-final_interview-fg border-stage-final_interview-edge',
+    mark: '#3F73FF',
   },
   offer: {
     label: 'Offer',

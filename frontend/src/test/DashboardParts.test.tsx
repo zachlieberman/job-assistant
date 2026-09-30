@@ -6,6 +6,7 @@ import ActivityChart from '../components/dashboard/ActivityChart'
 import StatusDonut from '../components/dashboard/StatusDonut'
 import RecentApplications from '../components/dashboard/RecentApplications'
 import { activitySeries, statusBreakdown } from '../lib/dashboardStats'
+import { STATUSES } from '../lib/statusMeta'
 import { makeApp } from './fixtures'
 
 describe('KpiTiles', () => {
@@ -68,7 +69,7 @@ describe('StatusDonut', () => {
     expect(within(item).getByText('2')).toBeInTheDocument()
     expect(within(item).getByText('50%')).toBeInTheDocument()
     expect(item.querySelector('svg')).not.toBeNull()
-    expect(screen.getAllByRole('listitem')).toHaveLength(5)
+    expect(screen.getAllByRole('listitem')).toHaveLength(STATUSES.length)
   })
 
   it('has an accessible summary', () => {

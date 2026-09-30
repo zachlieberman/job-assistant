@@ -18,7 +18,7 @@ from app.routes import (
     resumes,
 )
 from app.seed import seed_portfolio
-from app.status_path import backfill_status_paths
+from app.status_path import backfill_status_paths, migrate_legacy_statuses
 
 load_dotenv()
 
@@ -36,10 +36,15 @@ async def lifespan(app: FastAPI):
     try:
         async with AsyncSessionLocal() as db:
             repaired = await backfill_status_paths(db)
-        logger.info("Status path backfill repaired %d application(s)", repaired)
+            renamed = await migrate_legacy_statuses(db)
+        logger.info(
+            "Status backfill repaired %d application(s), renamed %d legacy status(es)",
+            repaired,
+            renamed,
+        )
     except Exception:
         # A failed repair must not take the API down; it retries on next start.
-        logger.exception("Status path backfill failed; continuing startup")
+        logger.exception("Status backfill failed; continuing startup")
     yield
 
 

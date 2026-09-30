@@ -4,34 +4,39 @@ import type { SankeyData } from '../api/client'
 export const SAMPLE_JOURNEY: SankeyData = {
   nodes: [
     { name: 'applied' },
-    { name: 'phone_screen' },
-    { name: 'technical' },
+    { name: 'recruiter_screen' },
+    { name: 'interview' },
+    { name: 'final_interview' },
     { name: 'offer' },
     { name: 'rejected' },
   ],
   links: [
     { source: 0, target: 1, value: 18 },
-    { source: 0, target: 4, value: 22 },
-    { source: 1, target: 2, value: 9 },
-    { source: 1, target: 4, value: 9 },
-    { source: 2, target: 3, value: 3 },
-    { source: 2, target: 4, value: 6 },
+    { source: 0, target: 5, value: 22 },
+    { source: 1, target: 2, value: 10 },
+    { source: 1, target: 5, value: 8 },
+    { source: 2, target: 3, value: 5 },
+    { source: 2, target: 5, value: 5 },
+    { source: 3, target: 4, value: 3 },
+    { source: 3, target: 5, value: 2 },
   ],
 }
 
 // Ink for stages still in play, body gray for ended applications.
 export const JOURNEY_COLORS: Record<string, string> = {
   applied: '#0A0C10',
-  phone_screen: '#0A0C10',
-  technical: '#0A0C10',
+  recruiter_screen: '#0A0C10',
+  interview: '#0A0C10',
+  final_interview: '#0A0C10',
   offer: '#0A0C10',
   rejected: '#5A5F68',
 }
 
 export const JOURNEY_LABELS: Record<string, string> = {
   applied: 'Applied',
-  phone_screen: 'Phone screen',
-  technical: 'Technical',
+  recruiter_screen: 'Recruiter screen',
+  interview: 'Interview',
+  final_interview: 'Final interview',
   offer: 'Offer',
   rejected: 'Rejected',
 }

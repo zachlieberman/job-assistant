@@ -108,8 +108,8 @@ describe('ApplicationTable', () => {
   })
 
   it('shows the status with an icon and label, not just a colour', () => {
-    renderTable({ ...defaultProps, applications: [mockApp({ status: 'phone_screen' })] })
-    const badge = screen.getAllByText('Phone screen').find((el) => el.querySelector('svg'))
+    renderTable({ ...defaultProps, applications: [mockApp({ status: 'recruiter_screen' })] })
+    const badge = screen.getAllByText('Recruiter screen').find((el) => el.querySelector('svg'))
     expect(badge).toBeTruthy()
   })
 

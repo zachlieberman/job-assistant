@@ -6,8 +6,9 @@ import { STATUSES, STATUS_META, isStatus, statusLabel } from '../lib/statusMeta'
 describe('StatusBadge', () => {
   it.each([
     ['applied', 'Applied'],
-    ['phone_screen', 'Phone screen'],
-    ['technical', 'Technical'],
+    ['recruiter_screen', 'Recruiter screen'],
+    ['interview', 'Interview'],
+    ['final_interview', 'Final interview'],
     ['offer', 'Offer'],
     ['rejected', 'Rejected'],
   ])('renders %s as "%s" with an icon', (status, label) => {
@@ -34,15 +35,15 @@ describe('statusMeta', () => {
     const icons = new Set(STATUSES.map((s) => STATUS_META[s].Icon))
     const labels = new Set(STATUSES.map((s) => STATUS_META[s].label))
     const marks = new Set(STATUSES.map((s) => STATUS_META[s].mark))
-    expect(icons.size).toBe(5)
-    expect(labels.size).toBe(5)
-    expect(marks.size).toBe(5)
+    expect(icons.size).toBe(STATUSES.length)
+    expect(labels.size).toBe(STATUSES.length)
+    expect(marks.size).toBe(STATUSES.length)
   })
 
   it('narrows and labels statuses', () => {
     expect(isStatus('offer')).toBe(true)
     expect(isStatus('nope')).toBe(false)
-    expect(statusLabel('phone_screen')).toBe('Phone screen')
+    expect(statusLabel('recruiter_screen')).toBe('Recruiter screen')
     expect(statusLabel('nope')).toBe('nope')
   })
 })

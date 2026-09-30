@@ -22,7 +22,7 @@ describe('JourneyDemoCard', () => {
     const table = screen.getByRole('table', { hidden: true })
     const rows = within(table).getAllByRole('row', { hidden: true })
     expect(rows).toHaveLength(SAMPLE_JOURNEY.links.length + 1)
-    expect(within(table).getAllByText('Phone screen', { exact: true, ignore: 'never' }).length).toBeGreaterThan(0)
+    expect(within(table).getAllByText('Recruiter screen', { exact: true, ignore: 'never' }).length).toBeGreaterThan(0)
     expect(screen.getByText('View as a table').tagName).toBe('SUMMARY')
   })
 
@@ -56,7 +56,7 @@ describe('JourneyDemoCard', () => {
 describe('journeyRows', () => {
   it('labels each link, falling back to the raw name', () => {
     const rows = journeyRows(SAMPLE_JOURNEY, { applied: 'Applied' })
-    expect(rows[0]).toEqual({ from: 'Applied', to: 'phone_screen', value: 18 })
+    expect(rows[0]).toEqual({ from: 'Applied', to: 'recruiter_screen', value: 18 })
   })
 })
 
@@ -68,7 +68,7 @@ describe('ApplicationJourneySankey (shared with the tracker)', () => {
 
   it('drops back-edges so d3-sankey never sees a cycle, and remaps nodes', () => {
     const data = {
-      nodes: [{ name: 'applied' }, { name: 'phone_screen' }, { name: 'rejected' }],
+      nodes: [{ name: 'applied' }, { name: 'recruiter_screen' }, { name: 'rejected' }],
       links: [
         { source: 0, target: 1, value: 5 },
         { source: 1, target: 0, value: 2 },
@@ -78,7 +78,7 @@ describe('ApplicationJourneySankey (shared with the tracker)', () => {
     const { container } = render(<ApplicationJourneySankey data={data} />)
     expect(container.querySelectorAll('svg rect')).toHaveLength(3)
     expect(container.querySelectorAll('svg path')).toHaveLength(2)
-    expect(container.textContent).toContain('Phone Screen (5)')
+    expect(container.textContent).toContain('Recruiter Screen (5)')
   })
 
   it('renders nothing (without throwing) when only back-edges exist', () => {
@@ -115,6 +115,6 @@ describe('JourneyChart tooltip', () => {
     await screen.findByLabelText('Applied: 40')
     const flows = [...container.querySelectorAll('svg path')]
     act(() => void flows.forEach((f) => f.dispatchEvent(new MouseEvent('pointerenter'))))
-    expect(screen.getByRole('tooltip')).toHaveTextContent(/^(Applied|Phone screen|Technical) to \w[\w ]*: \d+$/)
+    expect(screen.getByRole('tooltip')).toHaveTextContent(/^(Applied|Recruiter screen|Interview|Final interview) to \w[\w ]*: \d+$/)
   })
 })

@@ -1,6 +1,8 @@
 import type { Application } from '../api/client'
 import { STATUSES, type Status } from './statusMeta'
 
+const IN_PROGRESS: readonly Status[] = ['recruiter_screen', 'interview', 'final_interview']
+
 export interface Kpis {
   total: number
   inProgress: number
@@ -15,7 +17,7 @@ export function computeKpis(applications: readonly Application[]): Kpis {
   const responded = count((a) => a.status !== 'applied')
   return {
     total,
-    inProgress: count((a) => a.status === 'phone_screen' || a.status === 'technical'),
+    inProgress: count((a) => IN_PROGRESS.includes(a.status as Status)),
     offers: count((a) => a.status === 'offer'),
     responseRate: total === 0 ? null : Math.round((responded / total) * 100),
   }

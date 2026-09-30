@@ -10,17 +10,27 @@ from typing import Optional, List
 from app.database import get_db
 from app.models import Application, StatusEvent
 from app.schemas import ApplicationCreate, ApplicationUpdate, ApplicationResponse, ApplicationStatus
-from app.status_path import path_events, transitions_between
+from app.status_path import path_events
 
 
 CSV_STATUS_MAP: dict[str, str] = {
     "applied": "applied",
-    "phone screen": "phone_screen",
-    "phone_screen": "phone_screen",
-    "technical": "technical",
-    "technical interview": "technical",
+    "referred": "applied",
+    "recruiter screen": "recruiter_screen",
+    "recruiter_screen": "recruiter_screen",
+    "phone screen": "recruiter_screen",
+    "phone_screen": "recruiter_screen",
+    "interview": "interview",
+    "interview 1": "interview",
+    "interview 2": "interview",
+    "interview 3": "interview",
+    "technical": "interview",
+    "technical interview": "interview",
+    "final interview": "final_interview",
+    "final_interview": "final_interview",
     "offer": "offer",
     "rejected": "rejected",
+    "no offer": "rejected",
     "other": "applied",
     "": "applied",
 }
@@ -138,10 +148,7 @@ async def update_application(
     for field, value in payload.model_dump(exclude_none=True).items():
         setattr(app, field, value)
     if payload.status and payload.status != old_status:
-        db.add_all(
-            StatusEvent(application_id=app.id, from_status=src, to_status=dst)
-            for src, dst in transitions_between(old_status, payload.status)
-        )
+        db.add(StatusEvent(application_id=app.id, from_status=old_status, to_status=payload.status))
     await db.commit()
     await db.refresh(app)
     return app
