@@ -1,5 +1,6 @@
 import type { PortfolioBio } from '../../api/client'
 import { HEADLINE_LEAD, HEADLINE_TAIL } from '../../content/hero'
+import { RESUME_PATH } from '../../content/resume'
 import { stagger } from '../../lib/publicUtils'
 import sunset from '../../assets/home-sunset.jpg'
 import Photo from './Photo'
@@ -33,6 +34,17 @@ export default function Hero({ bio }: { bio: PortfolioBio }) {
               My experience
             </PillLink>
           </div>
+          <p className="mt-5">
+            <a
+              href={RESUME_PATH}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-bold text-ink underline underline-offset-4 hover:text-body"
+            >
+              Download resume (PDF)
+              <span className="sr-only"> (opens in a new tab)</span>
+            </a>
+          </p>
         </div>
         <div className="rise lg:col-span-4 lg:col-start-1 lg:row-start-1" style={stagger(4)}>
           <Photo

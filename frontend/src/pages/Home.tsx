@@ -3,6 +3,7 @@ import JsonLd from '../components/JsonLd'
 import Seo from '../components/Seo'
 import { HOME_SEO } from '../content/seo'
 import AsyncView from '../components/public/AsyncView'
+import ClosingCta from '../components/public/ClosingCta'
 import Hero from '../components/public/Hero'
 import { HeroSkeleton } from '../components/public/PageSkeletons'
 import SelectedWorks from '../components/public/SelectedWorks'
@@ -26,6 +27,7 @@ export default function Home() {
         {(bio) => <Hero bio={bio} />}
       </AsyncView>
       <SelectedWorks />
+      <ClosingCta bio={state.status === 'success' ? state.data : null} />
     </>
   )
 }
