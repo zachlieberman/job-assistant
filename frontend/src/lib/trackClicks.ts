@@ -1,42 +1,46 @@
-import { track } from '@vercel/analytics'
 import { RESUME_PATH } from '../content/resume'
 
-export interface ClickClassification {
-  name: 'Resume Click' | 'Contact Click'
-  target: 'resume' | 'email' | 'linkedin' | 'github'
-}
+export type ClickTarget = 'resume' | 'email' | 'linkedin' | 'github'
 
-const SOCIAL_HOSTS: Record<string, ClickClassification['target']> = {
+const SOCIAL_HOSTS: Record<string, ClickTarget> = {
   'linkedin.com': 'linkedin',
   'github.com': 'github',
 }
 
-/** Maps a link href to the analytics event it should fire, or null if it is not tracked. */
-export function classifyLink(href: string): ClickClassification | null {
-  if (href === RESUME_PATH || /\.pdf$/i.test(href)) return { name: 'Resume Click', target: 'resume' }
-  if (href.startsWith('mailto:')) return { name: 'Contact Click', target: 'email' }
+const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
+
+/** Maps a link href to the click target it should be recorded as, or null if it is not tracked. */
+export function classifyLink(href: string): ClickTarget | null {
+  if (href === RESUME_PATH || /\.pdf$/i.test(href)) return 'resume'
+  if (href.startsWith('mailto:')) return 'email'
   try {
-    const host = new URL(href).hostname.replace(/^www\./, '')
-    const target = SOCIAL_HOSTS[host]
-    return target ? { name: 'Contact Click', target } : null
+    return SOCIAL_HOSTS[new URL(href).hostname.replace(/^www\./, '')] ?? null
   } catch {
     return null
   }
 }
 
+function sendClick(target: ClickTarget): void {
+  // keepalive lets the request finish even when the click opens a new tab or leaves the page.
+  // Tracking is best-effort: a failure must never affect the link itself.
+  fetch(`${API_URL}/events/click`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ target, page: window.location.pathname }),
+    keepalive: true,
+  }).catch(() => undefined)
+}
+
 /**
- * Sends one Vercel Analytics custom event per resume / email / LinkedIn / GitHub link click,
- * using a single delegated listener so every link on every page is covered.
- * Returns a function that removes the listener.
+ * Records one click per resume / email / LinkedIn / GitHub link, using a single delegated
+ * listener so every link on every page is covered. Returns a function that removes it.
  */
 export function installClickTracking(): () => void {
   const onClick = (event: MouseEvent) => {
     const anchor = (event.target as Element | null)?.closest?.('a[href]')
     if (!anchor) return
-    const classification = classifyLink(anchor.getAttribute('href') ?? '')
-    if (classification) {
-      track(classification.name, { target: classification.target, page: window.location.pathname })
-    }
+    const target = classifyLink(anchor.getAttribute('href') ?? '')
+    if (target) sendClick(target)
   }
   document.addEventListener('click', onClick)
   return () => document.removeEventListener('click', onClick)

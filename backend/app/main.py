@@ -11,6 +11,7 @@ from app.routes import (
     applications,
     auth,
     cover_letter,
+    events,
     interview,
     portfolio,
     profile,
@@ -90,6 +91,7 @@ app.add_middleware(
 
 app.include_router(auth.router)
 app.include_router(portfolio.router)
+app.include_router(events.router)
 
 _private = [Depends(require_auth)]
 app.include_router(profile.router, dependencies=_private)

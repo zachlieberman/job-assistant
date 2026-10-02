@@ -1,19 +1,15 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-
-const track = vi.fn()
-vi.mock('@vercel/analytics', () => ({ track: (...args: unknown[]) => track(...args) }))
-
 import { classifyLink, installClickTracking } from '../lib/trackClicks'
 
 describe('classifyLink', () => {
   it.each([
-    ['/Zachary-Lieberman-Resume.pdf', 'Resume Click', 'resume'],
-    ['mailto:zach@example.com', 'Contact Click', 'email'],
-    ['https://www.linkedin.com/in/zach', 'Contact Click', 'linkedin'],
-    ['https://github.com/zach', 'Contact Click', 'github'],
-  ])('%s -> %s (%s)', (href, name, target) => {
-    expect(classifyLink(href)).toEqual({ name, target })
+    ['/Zachary-Lieberman-Resume.pdf', 'resume'],
+    ['mailto:zach@example.com', 'email'],
+    ['https://www.linkedin.com/in/zach', 'linkedin'],
+    ['https://github.com/zach', 'github'],
+  ])('%s -> %s', (href, target) => {
+    expect(classifyLink(href)).toBe(target)
   })
 
   it('ignores other links', () => {
@@ -24,28 +20,47 @@ describe('classifyLink', () => {
 })
 
 describe('installClickTracking', () => {
+  const fetchMock = vi.fn()
   let uninstall: () => void
+
   beforeEach(() => {
-    track.mockClear()
+    fetchMock.mockReset()
+    fetchMock.mockResolvedValue({ ok: true })
+    vi.stubGlobal('fetch', fetchMock)
     document.body.innerHTML =
       '<a id="r" href="/Zachary-Lieberman-Resume.pdf"><span id="in">Resume</span></a><a id="p" href="/projects">P</a>'
     uninstall = installClickTracking()
   })
-  afterEach(() => uninstall())
+  afterEach(() => {
+    uninstall()
+    vi.unstubAllGlobals()
+  })
 
-  it('tracks a resume click, including clicks on nested elements', () => {
+  it('posts a resume click, including clicks on nested elements', () => {
     document.getElementById('in')!.click()
-    expect(track).toHaveBeenCalledWith('Resume Click', { target: 'resume', page: '/' })
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    const [url, init] = fetchMock.mock.calls[0]
+    expect(url).toMatch(/\/events\/click$/)
+    expect(init.method).toBe('POST')
+    expect(init.keepalive).toBe(true)
+    expect(JSON.parse(init.body)).toEqual({ target: 'resume', page: '/' })
   })
 
-  it('does not track unrelated links', () => {
+  it('does not record unrelated links', () => {
     document.getElementById('p')!.click()
-    expect(track).not.toHaveBeenCalled()
+    expect(fetchMock).not.toHaveBeenCalled()
   })
 
-  it('stops tracking after uninstall', () => {
+  it('swallows network failures', async () => {
+    fetchMock.mockRejectedValue(new Error('offline'))
+    document.getElementById('r')!.click()
+    await Promise.resolve()
+    expect(fetchMock).toHaveBeenCalled()
+  })
+
+  it('stops recording after uninstall', () => {
     uninstall()
     document.getElementById('r')!.click()
-    expect(track).not.toHaveBeenCalled()
+    expect(fetchMock).not.toHaveBeenCalled()
   })
 })

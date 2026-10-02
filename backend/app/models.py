@@ -91,3 +91,14 @@ class StatusEvent(Base):
     from_status = Column(String, nullable=True)  # None for the initial "applied" creation event
     to_status = Column(String, nullable=False)
     changed_at = Column(DateTime, default=func.now())
+
+
+class ClickEvent(Base):
+    """One click on a tracked public-site link (resume, email, LinkedIn, GitHub)."""
+
+    __tablename__ = "click_events"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    target = Column(String, nullable=False, index=True)
+    page = Column(String, nullable=False)
+    created_at = Column(DateTime, default=func.now(), nullable=False, index=True)
