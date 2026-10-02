@@ -4,6 +4,7 @@ import { HelmetProvider } from 'react-helmet-async'
 import { BrowserRouter } from 'react-router-dom'
 import { Analytics } from '@vercel/analytics/react'
 import App from './App.public'
+import { installClickTracking } from './lib/trackClicks'
 import { readPrerenderData, seedPrerenderData } from './lib/prerenderData'
 import '@fontsource/familjen-grotesk/400.css'
 import '@fontsource/familjen-grotesk/700.css'
@@ -31,3 +32,5 @@ if (prerendered) {
 } else {
   ReactDOM.createRoot(container).render(app)
 }
+
+installClickTracking()
