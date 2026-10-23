@@ -34,7 +34,10 @@ describe('server render', () => {
 
   it('renders the home hero, not a skeleton', () => {
     const { html } = render('/')
-    expect(html).toContain('Available for work')
+    expect(html).not.toContain('Available for work')
+    expect(html).not.toContain('Open to software engineering roles')
+    expect(html).toContain('home-spacex')
+    expect(html).toContain('Build Reliability team in November 2026')
     expect(html).toContain('Software Engineer, based in Los Angeles, CA.')
     expect(html).toContain('fetchpriority="high"')
   })
