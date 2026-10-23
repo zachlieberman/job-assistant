@@ -2,7 +2,7 @@ import type { PortfolioBio } from '../../api/client'
 import { HEADLINE_LEAD, HEADLINE_TAIL } from '../../content/hero'
 import { RESUME_PATH } from '../../content/resume'
 import { stagger } from '../../lib/publicUtils'
-import sunset from '../../assets/home-sunset.jpg'
+import spacexRocket from '../../assets/home-spacex.jpg'
 import Photo from './Photo'
 import PillLink from './PillLink'
 
@@ -14,7 +14,7 @@ export default function Hero({ bio }: { bio: PortfolioBio }) {
     <section aria-labelledby="hero-title">
       <p className="rise flex items-center gap-3 text-base" style={stagger(0)}>
         <span aria-hidden="true" className="h-3 w-3 rounded-full bg-pine" />
-        Available for work
+        Joining SpaceX's Build Reliability team in November 2026.
       </p>
       <p className="rise mt-8 text-2xl font-bold text-ink" style={stagger(1)}>
         Hello! I'm {bio.name}.
@@ -48,8 +48,8 @@ export default function Hero({ bio }: { bio: PortfolioBio }) {
         </div>
         <div className="rise lg:col-span-4 lg:col-start-1 lg:row-start-1" style={stagger(4)}>
           <Photo
-            src={sunset}
-            alt="Zachary smiling and holding his small brown dog outdoors at a bright orange sunset by the ocean"
+            src={spacexRocket}
+            alt="Zachary smiling and pointing up in a blue polo, standing in front of a SpaceX rocket against a clear blue sky"
             eager
             className="max-w-md lg:max-w-none"
           />

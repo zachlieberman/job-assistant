@@ -49,7 +49,7 @@ describe('resume links', () => {
 
   it('the home page links the resume from the hero and the closing block', async () => {
     render(inRouter(<App />))
-    await screen.findByText(/Open to software engineering roles/)
+    await screen.findByText(/Email is the fastest way to reach me/)
     const hrefs = screen
       .getAllByRole('link')
       .map((link) => link.getAttribute('href'))
@@ -69,7 +69,8 @@ describe('resume links', () => {
 describe('closing call to action', () => {
   it('offers email and the resume once the bio is loaded', () => {
     render(inRouter(<ClosingCta bio={bio} />))
-    expect(screen.getByRole('heading', { name: 'Open to software engineering roles.' })).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'Contact' })).toBeInTheDocument()
+    expect(screen.queryByText(/Open to software engineering roles/)).not.toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Email me' })).toHaveAttribute('href', 'mailto:zach@example.com')
     expect(screen.getByRole('link', { name: /Download resume/ })).toHaveAttribute('href', RESUME_PATH)
   })
@@ -82,7 +83,7 @@ describe('closing call to action', () => {
 
   it('appears after the projects on the home page', async () => {
     render(inRouter(<App />))
-    await waitFor(() => expect(screen.getByText(/Open to software engineering roles/)).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText(/Email is the fastest way to reach me/)).toBeInTheDocument())
   })
 })
 

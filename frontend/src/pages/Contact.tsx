@@ -75,8 +75,7 @@ export default function Contact() {
       <div className="mt-10 grid gap-12 lg:grid-cols-12 lg:items-center">
         <div className="lg:col-span-7">
           <p className="max-w-prose">
-            Happy to talk about opportunities, projects, or anything else. Email is the fastest way
-            to reach me.
+            Happy to connect about projects or anything else. Email is the fastest way to reach me.
           </p>
           <div className="mt-10 max-w-2xl">
             <AsyncView resource={state} onRetry={retry} what="the contact details" fallback={<ContactSkeleton />}>
