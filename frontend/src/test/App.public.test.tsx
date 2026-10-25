@@ -57,10 +57,11 @@ describe('App.public', () => {
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
       'I build careful software for real problems.',
     )
-    expect(screen.getByText('Available for work')).toBeInTheDocument()
+    expect(screen.queryByText('Available for work')).not.toBeInTheDocument()
+    expect(screen.getByText("Joining SpaceX's Build Reliability team in November 2026.")).toBeInTheDocument()
     expect(screen.getByText('Software engineer, based in New York.')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'See my work' })).toHaveAttribute('href', '/projects')
-    expect(screen.getByRole('img', { name: /holding his small brown dog/ })).toHaveAttribute('width', '768')
+    expect(screen.getByRole('img', { name: /SpaceX rocket/ })).toHaveAttribute('width', '768')
     expect(document.title).toBe('Zachary Lieberman, Software Engineer in Los Angeles')
   })
 

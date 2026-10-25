@@ -8,14 +8,8 @@ export default function ClosingCta({ bio }: { bio: PortfolioBio | null }) {
   const email = bio?.email ? safeHref(`mailto:${bio.email}`) : null
 
   return (
-    <section aria-labelledby="closing-title" className="mt-28 sm:mt-40">
-      <h2 id="closing-title" className="display display-lg">
-        Open to software engineering roles.
-      </h2>
-      <p className="mt-6 max-w-prose">
-        If my work looks like a fit for your team, I'd like to hear about it. Email is the fastest way
-        to reach me.
-      </p>
+    <section aria-label="Contact" className="mt-16 sm:mt-24">
+      <p className="max-w-prose">Email is the fastest way to reach me.</p>
       <div className="mt-8 flex flex-wrap gap-3">
         {email ? (
           <PillLink to={email} arrow>
