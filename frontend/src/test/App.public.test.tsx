@@ -58,7 +58,7 @@ describe('App.public', () => {
       'I build careful software for real problems.',
     )
     expect(screen.queryByText('Available for work')).not.toBeInTheDocument()
-    expect(screen.getByText("Joining SpaceX's Build Reliability team in November 2026.")).toBeInTheDocument()
+    expect(screen.getByText('Software Engineer on the BRE Process Engineering team at SpaceX')).toBeInTheDocument()
     expect(screen.getByText('Software engineer, based in New York.')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'See my work' })).toHaveAttribute('href', '/projects')
     expect(screen.getByRole('img', { name: /SpaceX rocket/ })).toHaveAttribute('width', '768')
