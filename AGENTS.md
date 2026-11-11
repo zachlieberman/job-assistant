@@ -86,6 +86,18 @@ Pages:
 ## Git Workflow
 - All development work must be done on a feature branch — never push directly to `main`
 - Open a PR for every change and merge via GitHub
+- Branch, commit, and pull request names come from one canonical name, chosen before the branch is created. Do not invent a separate title for each.
+
+  Canonical name: `<type>: <imperative summary>`
+
+  - Pull request title: the canonical name, exactly.
+  - Squash-merge commit: the same canonical name. GitHub adds the PR number.
+  - Branch: `<type>/<slug>`. The slug is a 2–5 word kebab-case shortening of the summary, using the same words. No tool name, hash, or ticket suffix.
+  - Commits on the branch use the same `<type>:`. A single-commit branch uses the canonical name as its subject. Later commits keep that type and describe only their slice.
+
+  Types: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `perf`, `ci`.
+
+  Example: branch `feat/resume-and-closing-cta`, commit and pull request `feat: add resume link, closing contact block, and consistent location`.
 
 ## Key Constraints
 - Claude model is always `claude-sonnet-4-6` — do not change
