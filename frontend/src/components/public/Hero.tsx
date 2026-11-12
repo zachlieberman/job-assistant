@@ -14,7 +14,7 @@ export default function Hero({ bio }: { bio: PortfolioBio }) {
     <section aria-labelledby="hero-title">
       <p className="rise flex items-center gap-3 text-base" style={stagger(0)}>
         <span aria-hidden="true" className="h-3 w-3 rounded-full bg-pine" />
-        Joining SpaceX's Build Reliability team in November 2026.
+        Software Engineer on the BRE Process Engineering team at SpaceX
       </p>
       <p className="rise mt-8 text-2xl font-bold text-ink" style={stagger(1)}>
         Hello! I'm {bio.name}.
