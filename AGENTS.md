@@ -59,7 +59,7 @@ Environment: `backend/.env` needs `DATABASE_URL` and `ANTHROPIC_API_KEY`.
 ### Frontend (`frontend/src/`)
 React 18 + TypeScript + Vite + Tailwind. React Router v6 for routing. All API calls centralized in `api/client.ts` (Axios, baseURL `:8000`), which also exports all shared interfaces (`Application`, `ResumeTailorResponse`, `InterviewQuestion`, etc.). No global state — each page manages its own with `useState`/`useEffect`.
 
-The app is split into two independent builds that deploy to two separate URLs — a public portfolio (no login, no tracker code shipped) and a private, login-gated job tracker. They share `api/client.ts`, `pages/`, and Tailwind config, but have separate entry points, root components, and navbars so neither bundle pulls in the other's code:
+The app is split into two independent builds that deploy to two separate URLs — a public portfolio (no login, no tracker code shipped) and a private, login-gated job tracker. They share `api/client.ts` and `pages/`, but have separate entry points, root components, navbars, and Tailwind configs (`tailwind.public.config.js` and `tailwind.tracker.config.js`, chosen by mode in `vite.config.ts`) so neither bundle pulls in the other's code:
 
 - `apps/public/index.html` + `src/main.public.tsx` + `src/App.public.tsx` — portfolio: Home, Projects, Experience, Contact, using `components/PublicNavbar.tsx`. No auth, no tracker routes.
 - `apps/tracker/index.html` + `src/main.tracker.tsx` + `src/App.tracker.tsx` — job tracker: Login, Admin, Dashboard, and all `/tracker/*` routes gated by `components/RequireAuth.tsx`, using `components/TrackerNavbar.tsx`. Ships with `<meta name="robots" content="noindex, nofollow">`.
