@@ -42,7 +42,8 @@ git clone <repo-url>
 cd job-assistant
 
 cp backend/.env.example backend/.env
-# Edit backend/.env and add your ANTHROPIC_API_KEY
+# Set ANTHROPIC_API_KEY and change ADMIN_PASSWORD.
+# Startup fails without the API key, ADMIN_USERNAME, and ADMIN_PASSWORD.
 ```
 
 ### 2. Start the database
@@ -59,7 +60,7 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload
 ```
 
-API runs at `http://localhost:8000`. Tables are created automatically on first startup.
+API runs at `http://localhost:8000`. Tables are created automatically on first startup. There are no migrations. After a schema change, run `make db-reset` (this deletes the `postgres_data` volume) and restart the backend. Do not replace the Compose database with a raw `docker run`: the container name is `job-assistant-db` in both cases.
 
 ### 4. Frontend
 
@@ -78,8 +79,9 @@ Or use the Makefile shortcuts:
 
 ```bash
 make backend   # starts DB + backend
-make frontend  # starts frontend
-make test      # run frontend tests
+make frontend  # public portfolio on :5173
+make dev       # database, API, and public app
+make test      # backend pytest, then frontend vitest once
 ```
 
 ## Deployment
@@ -132,18 +134,20 @@ npm test               # watch mode
 npm run test:coverage  # with coverage report
 ```
 
-Tests live in `frontend/src/test/` and cover components (`StatusBadge`, `QuestionCard`, `ApplicationTable`), the `useToast` hook, and the `Dashboard` page.
+Tests live in `frontend/src/test/` and cover both the portfolio and the tracker, including pages, navigation, SEO, and hydration.
 
 ## Contributing
 
 All development work should be done on a feature branch and submitted as a pull request — do not push directly to `main`.
 
+Name the branch, the pull request, and the squash-merge commit from one string: `<type>: <imperative summary>`. The branch is `<type>/<slug>`, two to five kebab-case words that appear in that summary. Types are `feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `perf`, and `ci`. Later commits on the branch keep that type and describe only their slice. `AGENTS.md` and `CLAUDE.md` carry the same rule.
+
 ```bash
-git checkout -b feat/your-feature-name
+git checkout -b feat/resume-closing-contact
 # make changes
 make test          # confirm tests pass before opening a PR
-git push -u origin feat/your-feature-name
-gh pr create
+git push -u origin feat/resume-closing-contact
+gh pr create --title "feat: add resume link and closing contact block"
 ```
 
 ## Features
@@ -167,14 +171,25 @@ gh pr create
 
 Interactive docs at `http://localhost:8000/docs`
 
+Tracker, profile, resume, and interview routes require a login. Portfolio reads, `POST /auth/login`, `POST /events/click`, and `GET /health` do not. Portfolio writes require a login. `GET /events/summary` requires `STATS_API_KEY`.
+
 | Method | Endpoint | Description |
 |--------|----------|-------------|
+| POST | `/auth/login` | Log in to the tracker and admin panel |
+| GET/PUT | `/portfolio/bio` | Read or update the public bio |
+| GET/POST | `/portfolio/projects` | List or create portfolio projects |
+| GET/PUT/DELETE | `/portfolio/projects/{id}` | Manage a portfolio project |
+| GET/POST | `/portfolio/experience` | List or create experience entries |
+| GET/PUT/DELETE | `/portfolio/experience/{id}` | Manage an experience entry |
+| POST | `/events/click` | Record a public resume or contact click |
+| GET | `/events/summary` | Click totals for the traffic spreadsheet |
 | GET/PUT | `/profile` | Get or update profile |
 | GET/POST | `/resumes` | List or create resumes |
 | GET/PUT/DELETE | `/resumes/{id}` | Manage a resume |
 | POST | `/resume/tailor` | Tailor a resume to a job description |
 | POST | `/cover-letter/generate` | Generate a cover letter |
 | GET/POST | `/applications` | List or create applications |
+| GET | `/applications/sankey-data` | Data for the journey diagram |
 | GET/PUT/DELETE | `/applications/{id}` | Manage an application |
 | POST | `/applications/import-csv` | Bulk import applications from a CSV file |
 | POST | `/interview/prep` | Generate interview questions |
