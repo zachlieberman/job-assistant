@@ -51,7 +51,7 @@ FastAPI app with async SQLAlchemy (asyncpg driver). All AI calls go through `app
 - `app/schemas.py` — Pydantic models for portfolio content, profile, resumes, tailoring, cover letters, applications, and interview prep
 - `app/routes/` — `auth` is public. `portfolio` reads are public; its writes use `require_auth`. `POST /events/click` is public. `GET /events/summary` requires the `X-Stats-Key` header (`STATS_API_KEY`) and a `date` query parameter. These routers require a login on every route: `profile`, `resumes`, `resume`, `cover_letter`, `applications`, `interview`
 - `app/services/claude.py` — `tailor_resume`, `generate_cover_letter`, `generate_interview_prep`
-- `prompts/` — system prompts as `.txt` files (loaded at call time, not import time)
+- `prompts/` — system prompts as `.txt` files (loaded once at import time)
 
 Environment: `backend/.env` must set `DATABASE_URL`, `ANTHROPIC_API_KEY`, `ADMIN_USERNAME`, and `ADMIN_PASSWORD`. Startup raises if the API key or admin credentials are missing. `DATABASE_URL` is read in `app/database.py` and normalized to the asyncpg scheme. `TOKEN_SIGNING_KEY` is optional; auth falls back to `ADMIN_PASSWORD`. `require_auth` protects the six private routers and every portfolio write.
 
