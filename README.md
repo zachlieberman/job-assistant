@@ -171,7 +171,7 @@ gh pr create --title "feat: add resume link and closing contact block"
 
 Interactive docs at `http://localhost:8000/docs`
 
-Tracker, profile, resume, and interview routes require a login. Portfolio reads, `POST /auth/login`, `POST /events/click`, and `GET /health` do not. Portfolio writes require a login. `GET /events/summary` requires `STATS_API_KEY`.
+Tracker, profile, resume, and interview routes require a login. Portfolio reads, `POST /auth/login`, `POST /events/click`, and `GET /health` do not. Portfolio writes require a login. `GET /events/summary` requires an `X-Stats-Key` header set to `STATS_API_KEY` and a `date` query parameter.
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
@@ -182,7 +182,7 @@ Tracker, profile, resume, and interview routes require a login. Portfolio reads,
 | GET/POST | `/portfolio/experience` | List or create experience entries |
 | GET/PUT/DELETE | `/portfolio/experience/{id}` | Manage an experience entry |
 | POST | `/events/click` | Record a public resume or contact click |
-| GET | `/events/summary` | Click totals for the traffic spreadsheet |
+| GET | `/events/summary` | Click totals for one UTC day. Header `X-Stats-Key`, query `date` |
 | GET/PUT | `/profile` | Get or update profile |
 | GET/POST | `/resumes` | List or create resumes |
 | GET/PUT/DELETE | `/resumes/{id}` | Manage a resume |
