@@ -43,7 +43,7 @@ Tables are created automatically on backend startup via `create_all`. There are 
 ## Architecture
 
 ### Backend (`backend/`)
-FastAPI app with async SQLAlchemy (asyncpg driver). All AI calls go through `app/services/claude.py`, which loads prompt templates from `prompts/*.txt`, calls `claude-sonnet-4-6`, strips markdown code fences, and parses JSON. Routes are thin — they call one service function and return its result.
+FastAPI app with async SQLAlchemy (asyncpg driver). All AI calls go through `app/services/claude.py`, which reads `prompts/*.txt` when the module is imported, calls `claude-sonnet-4-6`, strips markdown code fences, and parses JSON. The `resume`, `cover_letter`, and `interview` routes call one function in `claude.py`. The other routes talk to the database directly.
 
 - `app/main.py` — lifespan runs `init_db()`, `seed_portfolio()`, `backfill_status_paths()`, and `migrate_legacy_statuses()`. CORS defaults to `http://localhost:5173`, reads `CORS_ORIGINS`, and allows this team's Vercel preview origins.
 - `app/database.py` — async engine + `get_db` dependency
@@ -51,12 +51,12 @@ FastAPI app with async SQLAlchemy (asyncpg driver). All AI calls go through `app
 - `app/schemas.py` — Pydantic models for portfolio content, profile, resumes, tailoring, cover letters, applications, and interview prep
 - `app/routes/` — `auth` is public. `portfolio` reads are public; its writes use `require_auth`. `POST /events/click` is public. `GET /events/summary` requires the `X-Stats-Key` header (`STATS_API_KEY`) and a `date` query parameter. These routers require a login on every route: `profile`, `resumes`, `resume`, `cover_letter`, `applications`, `interview`
 - `app/services/claude.py` — `tailor_resume`, `generate_cover_letter`, `generate_interview_prep`
-- `prompts/` — system prompts as `.txt` files (loaded at call time, not import time)
+- `prompts/` — `resume_tailor.txt`, `cover_letter.txt`, and `interview_prep.txt`, read once when `claude.py` is imported. Restart the backend after editing them.
 
 Environment: `backend/.env` must set `DATABASE_URL`, `ANTHROPIC_API_KEY`, `ADMIN_USERNAME`, and `ADMIN_PASSWORD`. Startup raises if the API key or admin credentials are missing. `DATABASE_URL` is read in `app/database.py` and normalized to the asyncpg scheme. `TOKEN_SIGNING_KEY` is optional; auth falls back to `ADMIN_PASSWORD`. `require_auth` protects the six private routers and every portfolio write.
 
 ### Frontend (`frontend/src/`)
-React 18 + TypeScript + Vite + Tailwind. React Router v6 for routing. All API calls centralized in `api/client.ts` (Axios, baseURL `:8000`), which also exports all shared interfaces (`Application`, `ResumeTailorResponse`, `InterviewQuestion`, etc.). No global state — each page manages its own with `useState`/`useEffect`.
+React 18 + TypeScript + Vite + Tailwind. React Router v6 for routing. Most API calls go through `api/client.ts` (Axios). The base URL is `VITE_API_URL`, otherwise `http://localhost:8000`. That module also exports the shared interfaces (`Application`, `ResumeTailorResponse`, `InterviewQuestion`, and others). Public click tracking is a separate `fetch` in `src/lib/trackClicks.ts` and uses the same base URL. No global state — each page manages its own with `useState`/`useEffect`.
 
 The app is split into two independent builds that deploy to two separate URLs — a public portfolio (no login, no tracker code shipped) and a private, login-gated job tracker. They share `api/client.ts` and `pages/`, but have separate entry points, root components, shells, and Tailwind configs (`tailwind.public.config.js` and `tailwind.tracker.config.js`, chosen by mode in `vite.config.ts`) so neither bundle pulls in the other's code:
 
@@ -65,7 +65,7 @@ The app is split into two independent builds that deploy to two separate URLs �
 - `vite.config.ts` picks the root/output dir by `--mode` (`public` or `tracker`); vitest always runs against the shared `src/` root regardless of mode.
 - Public prerendering: `src/entry-server.tsx` exports `render(url)` (React Router `StaticRouter` + react-helmet-async) and `scripts/prerender.mjs` writes `index.html`, `projects/`, `experience/`, `contact/` and `404.html` into `dist/`. Build-time data is seeded into the `useApiResource` cache (`src/lib/prerenderData.ts`; keys `bio`, `projects`, `experience` must match the pages) and embedded as JSON so `main.public.tsx` hydrates with identical data. Anything that renders differently on server and client (browser-only checks in initial state) breaks hydration; `src/test/hydration.test.tsx` guards this. Server-render tests use `// @vitest-environment node`.
 - The resume is a static file, `frontend/apps/public/public/Zachary-Lieberman-Resume.pdf` (linked from the hero, closing block, Contact page and footer via `src/content/resume.ts`). It is a web copy with the phone number removed; replace the file to update it and keep personal contact details out of it.
-- Skills, education and certifications on the Experience page live in `frontend/src/content/profile.ts` (not the admin panel; a schema change would need a DB reset). The same file feeds the home page's `alumniOf` and `knowsAbout` structured data.
+- Skills, education and certifications on the Experience page live in `frontend/src/content/profile.ts`, not the admin panel and not the database. Edit that file and redeploy. A `make db-reset` is only for a database schema change. The same file feeds the home page's `alumniOf` and `knowsAbout` structured data.
 - `sitemap.xml` is generated by `scripts/prerender.mjs` (content-hash based `lastmod`, see `scripts/sitemap.mjs`); do not add a static one to `apps/public/public/`. `vercel.json` sets a Content-Security-Policy for both apps, so a new external origin (script, API, font, image) must be added to it.
 - `vercel.json` has no catch-all rewrite (unknown public URLs return the prerendered `404.html` with a 404). The tracker build copies its shell to `404.html` in `vite.config.ts` so its deep links still load.
 
@@ -78,19 +78,19 @@ Tracker:
 - `pages/Login` — unauthenticated
 - `pages/Admin` — `/admin`, edit portfolio bio, projects, and experience
 - `pages/Dashboard` — `/tracker`, stats cards and filterable application table
-- `pages/NewApplication` — `/tracker/new`, paste a job description and resume, trigger tailor and cover letter independently, save
-- `pages/ApplicationDetail` — `/tracker/applications/:id`, original vs tailored resume, status and notes, delete
+- `pages/NewApplication` — `/tracker/new`, save company, role, job description, location, and salary, then open the detail page
+- `pages/ApplicationDetail` — `/tracker/applications/:id`, status, job description, one tailored resume, cover letter, notes, and delete. Tailor and cover letter run here from `AiActionsPanel`
 - `pages/InterviewPrep` — `/tracker/interview/:id`, question-type checkboxes, `QuestionCard` list
 - `pages/Journey` — `/tracker/journey`, application status path
 - `pages/Profile` — `/tracker/profile`, saved resumes and profile links
 
-Components agents usually touch: `PublicNavbar`, `SiteMenu`, `TrackerShell`, `Sidebar`, `RequireAuth`, `ApplicationTable`, `StatusBadge`, `ResumeEditor`, `QuestionCard`.
+Components agents usually touch: `PublicNavbar`, `SiteMenu`, `TrackerShell`, `Sidebar`, `RequireAuth`, `ApplicationTable`, `StatusBadge`, `DocSection`, `QuestionCard`. Saved resumes use `ResumeForm` on the profile page. `ResumeEditor` is not imported.
 
 ## Deployment
 - Each frontend build deploys as its own Vercel project (same repo, different build command and output dir); backend + Postgres deploy to Railway. See [DEPLOYMENT.md](DEPLOYMENT.md).
 - Because the public build bakes content into static HTML, admin content edits reach crawlers only after a redeploy of the public Vercel project (visitors see edits immediately via the runtime refresh).
 - Backend reads `CORS_ORIGINS` (comma-separated) and normalizes `DATABASE_URL` to the asyncpg scheme — see `app/main.py` and `app/database.py`. It must list both the portfolio and tracker Vercel URLs.
-- Frontend reads the API base URL from `VITE_API_URL` (`src/api/client.ts`) — set it the same way on both Vercel projects.
+- Frontend reads the API base URL from `VITE_API_URL` in `src/api/client.ts` and `src/lib/trackClicks.ts` — set it the same way on both Vercel projects. The local fallback is `http://localhost:8000`.
 
 ## Git Workflow
 - All development work must be done on a feature branch — never push directly to `main`
@@ -111,6 +111,6 @@ Components agents usually touch: `PublicNavbar`, `SiteMenu`, `TrackerShell`, `Si
 
 ## Key Constraints
 - Claude model is always `claude-sonnet-4-6` — do not change
-- Max tokens: 2000 for resume/cover letter, 1500 for interview prep
+- Max tokens: 4000 for resume tailoring, 2000 for cover letters, 1500 for interview prep
 - All Claude responses must be JSON — prompts instruct this; `claude.py` parses with error handling
 - Application statuses: `applied`, `recruiter_screen`, `interview`, `final_interview`, `offer`, `rejected` (old `phone_screen`/`technical` rows are renamed on startup by `migrate_legacy_statuses`)

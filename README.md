@@ -92,7 +92,6 @@ See [DEPLOYMENT.md](DEPLOYMENT.md) for deploying the frontend to Vercel and the 
 
 ```bash
 make test            # run all tests (backend + frontend)
-make test-watch      # backend: re-run on file changes
 make test-frontend   # frontend only
 ```
 
